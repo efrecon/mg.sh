@@ -84,6 +84,12 @@ check_verbosity() {
   printf %s\\n "$_LOG_LEVELS" | grep -qi "${1:-$MG_VERBOSITY}"
 }
 
+at_verbosity() (
+  passed=$(printf %s\\n "$_LOG_LEVELS" | sed -n "/${1}/=" | tr "[:lower:]" "[:upper:]")
+  current=$(printf %s\\n "$_LOG_LEVELS" | sed -n "/${MG_VERBOSITY}/=" | tr "[:lower:]" "[:upper:]")
+  test "$passed" -le "$current"
+)
+
 usage() {
   [ "$#" -gt "1" ] && printf %s\\n "$2" >&2
   if [ -z "$MG_USAGE" ]; then
