@@ -1,22 +1,25 @@
 # Mitigram Shell Library
 
-This directory contains a number of scripts snippets that can be directly
+This project contains a number of scripts snippets that can be directly
 sourced in target scripts and provide reusable code. These snippets mainly
 target POSIX shell scripts, but using them from other shells such as `bash`
-should be fine.
+should be fine. The libraries have unit [tests](#testing).
 
 To use these scripts, the following snippet can be copied (and adapted) into
 your main script. You should insert this as early on as possible, e.g. typically
 right after the shebang and initial documenting comment. The example loads two
 scripts from this library, i.e. [`log`](#logging-library) and
-[`controls`](#controls-library).
+[`controls`](#controls-library). Apart from variable naming, you will have to
+pay specific attention to provide good defaults as `LIBPATH`.
 
 ```shell
 # Build a default colon separated YOURSCRIPT_LIBPATH using the root directory to
-# look for modules that we depend on. YOURSCRIPT_LIBPATH can be set from the outside
-# to facilitate location.
-YOURSCRIPT_ROOTDIR=$( cd -P -- "$(dirname -- "$(command -v -- "$0")")" && pwd -P )
-YOURSCRIPT_LIBPATH=${YOURSCRIPT_LIBPATH:-${YOURSCRIPT_ROOTDIR}/../../../scripts/lib:${YOURSCRIPT_ROOTDIR}/lib}
+# look for modules that this script depends on. YOURSCRIPT_LIBPATH can be set
+# from the outside to facilitate location. Note that this only works when there
+# is support for readlink -f, see https://github.com/ko1nksm/readlinkf for a
+# POSIX alternative.
+YOURSCRIPT_ROOTDIR=$( cd -P -- "$(dirname -- "$(command -v -- "$(readlink -f "$0")")")" && pwd -P )
+YOURSCRIPT_LIBPATH=${YOURSCRIPT_LIBPATH:-/usr/local/share/mg.sh:${YOURSCRIPT_ROOTDIR}/lib/mg.sh}
 
 # Look for modules passed as parameters in the YOURSCRIPT_LIBPATH and source them.
 # Modules are required so fail as soon as it was not possible to load a module
@@ -42,8 +45,6 @@ module() {
 # Source in all relevant modules.
 module log controls
 ```
-
-The libraries have unit [tests](#testing).
 
 ## Logging Library
 
@@ -269,6 +270,17 @@ Testing is based on [shellspec]. Provided you have `shellspec`
 run all the tests. Note that some of the control loop test have built-in
 timeouts, meaning that it is normal for some of those test to take some time (a
 few seconds).
+
+```shell
+shellspec
+```
+
+If you haven't `shellspec` installed, but can run docker, the following command
+will create a self-destructive container to run the tests in.
+
+```shell
+docker run -it --rm -v $(pwd):/mg.sh -w /mg.sh -u $(id -u):$(id -g) shellspec/shellspec
+```
 
   [shellspec]: https://shellspec.info/
   [install]: https://github.com/shellspec/shellspec#installation
