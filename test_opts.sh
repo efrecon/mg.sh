@@ -37,5 +37,6 @@ parseopts \
   --prefix TOPT \
   --options \
       h,help FLAG "" 0 "Gives this help and exit" \
-      s,sleep OPTION WAIT 10 "How long to wait" \
+      s,sleep,wait OPTION WAIT 10 "How long to wait" \
   -- "$@"
+set | grep "^TOPT"
