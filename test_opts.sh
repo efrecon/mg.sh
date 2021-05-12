@@ -36,7 +36,7 @@ MG_VERBOSITY=trace
 parseopts \
   --prefix TOPT \
   --options \
-      h,help FLAG "" 0 "Gives this help and exit" \
+      h,help FLAG - - "Gives this help and exit" \
       s,sleep,wait OPTION WAIT 10 "How long to wait" \
   -- "$@"
 set | grep "^TOPT"

@@ -3,6 +3,10 @@
 parseopts() {
   stack_let prefix
   stack_let options
+  stack_let marker
+
+  # Has to be separate to avoid stack_let bug
+  marker=-
 
   _quote() {
     if [ -z "$1" ]; then
@@ -18,14 +22,20 @@ parseopts() {
 
   _find() {
     stack_let nm
+    stack_let l_nm
+
     OIFS=$IFS
     IFS=,; for nm in $(printf %s\\n "$2"); do
-      if [ "${1#-}" = "${nm#-}" ]; then
-        printf %s\\n "${nm#-}"
+      l_nm=$(printf %s "${nm##-}" | wc -c); # No \n otherwise 1 char too long!
+      if [ "${1##-}" = "${nm##-}" ] && \
+          [ "$l_nm" -ge "${3:-0}" ] && \
+          [ "$l_nm" -le "${4:-999}" ]; then
+        printf %s\\n "${nm##-}"
       fi
     done
     IFS=$OIFS
     stack_unlet nm
+    stack_unlet l_nm
   }
 
   _toupper() {
@@ -46,7 +56,7 @@ EOF
   }
 
   _setvar() {
-    if [ -n "$1" ]; then
+    if [ -n "$1" ] && [ "$1" != "$marker" ]; then
       if [ -n "$2" ]; then
         eval "$(printf "%s=%s" "${2%_}_${1#_}" "$3")"
       else
@@ -77,6 +87,9 @@ $options"
         done
         ;;
 
+      -n | --marker)
+        marker=$2; shift 2;;
+
       --)
         shift; break;;
 
@@ -89,7 +102,7 @@ $options"
   while IFS="$(printf '\n')" read -r line; do
     if [ -n "$line" ]; then
       _fields "$line"; # Sets: names, type, varname, default and text
-      if [ -n "$default" ]; then
+      if [ "$default" != "$marker" ]; then
         _setvar "$varname" "$prefix" "$default"
       fi
     fi
@@ -105,7 +118,7 @@ EOF
           if [ -n "$line" ]; then
             _fields "$line"; # Sets: names, type, varname, default and text
 
-            candidate=$(_find "$1" "$names")
+            candidate=$(_find "$1" "$names" 1 1)
             if [ -n "$candidate" ]; then
               case "$(_toupper "$type")" in
                 FLAG)
@@ -137,7 +150,7 @@ EOF
 
             opt="${1%=*}"; opt="${opt#--}"
             val="${1#*=}"
-            candidate=$(_find "$opt" "$names")
+            candidate=$(_find "$opt" "$names" 2)
             if [ -n "$candidate" ]; then
               case "$(_toupper "$type")" in
                 FLAG)
@@ -176,7 +189,7 @@ EOF
           if [ -n "$line" ]; then
             _fields "$line"; # Sets: names, type, varname, default and text
 
-            candidate=$(_find "${1#--}" "$names")
+            candidate=$(_find "${1#--}" "$names" 2)
             if [ -n "$candidate" ]; then
               case "$(_toupper "$type")" in
                 FLAG)
