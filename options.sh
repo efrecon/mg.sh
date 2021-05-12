@@ -4,6 +4,12 @@ parseopts() {
   stack_let prefix
   stack_let options
   stack_let marker
+  stack_let line
+  stack_let names
+  stack_let type
+  stack_let varname
+  stack_let default
+  stack_let text
 
   # Has to be separate to avoid stack_let bug
   marker=-
@@ -55,6 +61,29 @@ EOF
     text=$(_unquote "$text")
   }
 
+  _help() {
+    stack_let line
+    stack_let names
+    stack_let type
+    stack_let varname
+    stack_let default
+    stack_let text
+
+    printf "OPTIONS:\n"
+    printf "\n"
+    while IFS="$(printf '\n')" read -r line; do
+      if [ -n "$line" ]; then
+        _fields "$line"; # Sets: names, type, varname, default and text
+        printf "  %s\n" "$names"
+        printf "    %s\n" "$text"
+      fi
+    done <<EOF
+$(printf %s\\n "$options"|sort)
+EOF
+    printf "\n"
+    stack_unlet line names type varname default text
+  }
+
   _setvar() {
     if [ -n "$1" ] && [ "$1" != "$marker" ]; then
       if [ -n "$2" ]; then
@@ -62,6 +91,21 @@ EOF
       else
         eval "$(printf "%s=%s" "$2" "$3")"
       fi
+    fi
+  }
+
+  _trigger() {
+    if [ "$(printf %s\\n "$2"|cut -c 1)" = "@" ]; then
+      stack_let cb
+      cb=$(printf %s\\n "$2"|cut -c 2-)
+      if [ "$cb" = "HELP" ]; then
+        _help
+      else
+        "$cb" "$1" "$4"
+      fi
+      stack_unlet cb
+    else
+      _setvar "$2" "$3" "$4"
     fi
   }
 
@@ -87,7 +131,7 @@ $options"
         done
         ;;
 
-      -n | --marker)
+      -m | --marker)
         marker=$2; shift 2;;
 
       --)
@@ -102,7 +146,8 @@ $options"
   while IFS="$(printf '\n')" read -r line; do
     if [ -n "$line" ]; then
       _fields "$line"; # Sets: names, type, varname, default and text
-      if [ "$default" != "$marker" ]; then
+      if [ "$default" != "$marker" ] && \
+         [ "$(printf %s\\n "$varname"|cut -c 1)" != "@" ]; then
         _setvar "$varname" "$prefix" "$default"
       fi
     fi
@@ -122,12 +167,12 @@ EOF
             if [ -n "$candidate" ]; then
               case "$(_toupper "$type")" in
                 FLAG)
-                  _setvar "$varname" "$prefix" "1"
+                  _trigger "$candidate" "$varname" "$prefix" "1"
                   found=$candidate
                   shift
                   break;;
                 OPT*)
-                  _setvar "$varname" "$prefix" "$2"
+                  _trigger "$candidate" "$varname" "$prefix" "$2"
                   found=$candidate
                   shift 2
                   break;;
@@ -156,10 +201,10 @@ EOF
                 FLAG)
                   case "$(_tolower "$val")" in
                     true | on | yes | 1)
-                      _setvar "$varname" "$prefix" "1"
+                      _trigger "$candidate" "$varname" "$prefix" "1"
                       found=$candidate;;
                     false | off | no | 0)
-                      _setvar "$varname" "$prefix" "0"
+                      _trigger "$candidate" "$varname" "$prefix" "0"
                       found=$candidate;;
                     *)
                       log_error "Value in flag $1 not a recognised boolean!";;
@@ -168,7 +213,7 @@ EOF
                   break
                   ;;
                 OPT*)
-                  _setvar "$varname" "$prefix" "$val"
+                  _trigger "$candidate" "$varname" "$prefix" "$val"
                   found=$candidate
                   shift
                   break;;
@@ -193,12 +238,12 @@ EOF
             if [ -n "$candidate" ]; then
               case "$(_toupper "$type")" in
                 FLAG)
-                  _setvar "$varname" "$prefix" "1"
+                  _trigger "$candidate" "$varname" "$prefix" "1"
                   found=$candidate
                   shift
                   break;;
                 OPT*)
-                  _setvar "$varname" "$prefix" "$2"
+                  _trigger "$candidate" "$varname" "$prefix" "$2"
                   found=$candidate
                   shift 2
                   break;;
@@ -221,6 +266,6 @@ EOF
     esac
   done
 
-  stack_unlet prefix
-  stack_unlet options
+  stack_unlet line names type varname default text
+  stack_unlet prefix options marker
 }

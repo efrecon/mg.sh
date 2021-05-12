@@ -32,11 +32,15 @@ module() {
 # Source in all relevant modules.
 module log controls options
 
+callback() {
+  echo "$1 => $2"
+}
 MG_VERBOSITY=trace
 parseopts \
   --prefix TOPT \
   --options \
-      h,help FLAG - - "Gives this help and exit" \
+      h,help FLAG @HELP - "Gives this help and exit" \
       s,sleep,wait OPTION WAIT 10 "How long to wait" \
+      trigger OPTION @callback 46 "Generate a callback" \
   -- "$@"
 set | grep "^TOPT"
