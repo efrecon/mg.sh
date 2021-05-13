@@ -17,16 +17,8 @@ fi
 parseopts() {
   stack_let prefix
   stack_let options
-  stack_let marker
-  stack_let line
-  stack_let names
-  stack_let type
-  stack_let varname
-  stack_let default
-  stack_let text
-
-  # Has to be separate to avoid stack_let bug
-  marker=-
+  stack_let marker "-"
+  stack_let main 0
 
   _quote() {
     if [ -z "$1" ]; then
@@ -75,6 +67,14 @@ EOF
     text=$(_unquote "$text")
   }
 
+  _critical() {
+    if [ "$main" = "1" ]; then
+      die "$1"
+    else
+      log_error "$1"
+    fi
+  }
+
   _help() {
     # Avoid polluting main variables, add a stack!
     stack_let line
@@ -99,6 +99,7 @@ $(printf %s\\n "$options"|sort)
 EOF
     printf "\n" >&2
     stack_unlet line names type varname default text
+    [ "$main" = "1" ] && die
   }
 
   _setvar() {
@@ -148,8 +149,11 @@ $options"
         done
         ;;
 
-      -m | --marker)
+      -k | --marker)
         marker=$2; shift 2;;
+
+      -m | --main)
+        main=1; shift;;
 
       --)
         shift; break;;
@@ -158,6 +162,13 @@ $options"
         break;;
     esac
   done
+
+  stack_let line
+  stack_let names
+  stack_let type
+  stack_let varname
+  stack_let default
+  stack_let text
 
   # Set defaults
   while IFS="$(printf '\n')" read -r line; do
@@ -203,7 +214,7 @@ EOF
 $(printf %s\\n "$options")
 EOF
         if [ -z "$found" ]; then
-          log_error "$1 is an unknown option"
+          _critical "$1 is an unknown option"
           break
         fi
         ;;
@@ -227,7 +238,7 @@ EOF
                       _trigger "$candidate" "$varname" "$prefix" "0"
                       found=$candidate;;
                     *)
-                      log_error "Value in flag $1 not a recognised boolean!";;
+                      _critical "Value in flag $1 not a recognised boolean!";;
                   esac
                   shift
                   break
@@ -244,7 +255,7 @@ EOF
 $(printf %s\\n "$options")
 EOF
         if [ -z "$found" ]; then
-          log_error "$opt is an unknown option"
+          _critical "$opt is an unknown option"
           break
         fi
         ;;
@@ -274,12 +285,12 @@ EOF
 $(printf %s\\n "$options")
 EOF
         if [ -z "$found" ]; then
-          log_error "$1 is an unknown option"
+          _critical "$1 is an unknown option"
           break
         fi
         ;;
       -*)
-        log_error "$1 is an unknown option"
+        _critical "$1 is an unknown option"
         break;;
       *)
         break;;

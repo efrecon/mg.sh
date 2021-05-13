@@ -42,5 +42,6 @@ parseopts \
       h,help FLAG @HELP - "Gives this help and exit" \
       s,sleep,wait OPTION WAIT 10 "How long to wait" \
       trigger OPTION @callback 46 "Generate a callback" \
+  --main \
   -- "$@"
 set | grep "^TOPT"
