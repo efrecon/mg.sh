@@ -1,5 +1,19 @@
 #!/usr/bin/env sh
 
+# Protect against double loading and register dependencies
+if printf %s\\n "${MG_MODULES:-}"|grep -q "options"; then
+  return
+else
+  MG_MODULES="${MG_MODULES:-} options"
+fi
+
+if ! printf %s\\n "${MG_MODULES:-}"|grep -q "log"; then
+  printf %s\\n "This module requires the log module" >&2
+fi
+if ! printf %s\\n "${MG_MODULES:-}"|grep -q "controls"; then
+  die "This module requires the controls module"
+fi
+
 parseopts() {
   stack_let prefix
   stack_let options
@@ -62,6 +76,7 @@ EOF
   }
 
   _help() {
+    # Avoid polluting main variables, add a stack!
     stack_let line
     stack_let names
     stack_let type
@@ -69,12 +84,15 @@ EOF
     stack_let default
     stack_let text
 
+    # FIXME: output to stderr by default, or what log module uses?
     printf "OPTIONS:\n"
     printf "\n"
     while IFS="$(printf '\n')" read -r line; do
       if [ -n "$line" ]; then
         _fields "$line"; # Sets: names, type, varname, default and text
+        # FIXME: add single or double dash, remove commas
         printf "  %s\n" "$names"
+        # FIXME: Wrap at 80 columns.
         printf "    %s\n" "$text"
       fi
     done <<EOF
@@ -146,9 +164,12 @@ $options"
   while IFS="$(printf '\n')" read -r line; do
     if [ -n "$line" ]; then
       _fields "$line"; # Sets: names, type, varname, default and text
-      if [ "$default" != "$marker" ] && \
-         [ "$(printf %s\\n "$varname"|cut -c 1)" != "@" ]; then
-        _setvar "$varname" "$prefix" "$default"
+      if [ "$default" != "$marker" ]; then
+        _trigger \
+            "$(printf %s\\n "$names" | cut -d , -f 1)" \
+            "$varname" \
+            "$prefix" \
+            "$default"
       fi
     fi
   done <<EOF

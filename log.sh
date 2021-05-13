@@ -1,5 +1,12 @@
 #!/usr/bin/env sh
 
+# Protect against double loading and register dependencies
+if printf %s\\n "${MG_MODULES:-}"|grep -q "log"; then
+  return
+else
+  MG_MODULES="${MG_MODULES:-} log"
+fi
+
 # When run at the terminal, the default is to set MG_INTERACTIVE to be 1,
 # turning on colouring for all calls to the colouring functions contained here.
 if [ -t 1 ]; then

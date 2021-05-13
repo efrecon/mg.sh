@@ -1,5 +1,12 @@
 #!/usr/bin/env sh
 
+# Protect against double loading and register dependencies
+if printf %s\\n "${MG_MODULES:-}"|grep -q "controls"; then
+  return
+else
+  MG_MODULES="${MG_MODULES:-} controls"
+fi
+
 # This is a cleaned up version of https://stackoverflow.com/a/18600920. It
 # properly passes shellcheck's default set of rules.
 stack_let() {
@@ -24,7 +31,7 @@ stack_let() {
   eval "$dynvar_name"='$'dynvar_value
 
   # Restore set state
-  set +vx; eval "$_oldstate"  
+  set +vx; eval "$_oldstate"
 }
 
 stack_unlet() {
