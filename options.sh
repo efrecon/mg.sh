@@ -84,21 +84,20 @@ EOF
     stack_let default
     stack_let text
 
-    # FIXME: output to stderr by default, or what log module uses?
-    printf "OPTIONS:\n"
-    printf "\n"
+    printf "OPTIONS:\n" >&2
+    printf "\n" >&2
     while IFS="$(printf '\n')" read -r line; do
       if [ -n "$line" ]; then
         _fields "$line"; # Sets: names, type, varname, default and text
         # FIXME: add single or double dash, remove commas
-        printf "  %s\n" "$names"
+        printf "  %s\n" "$names" >&2
         # FIXME: Wrap at 80 columns.
-        printf "    %s\n" "$text"
+        printf "    %s\n" "$text" >&2
       fi
     done <<EOF
 $(printf %s\\n "$options"|sort)
 EOF
-    printf "\n"
+    printf "\n" >&2
     stack_unlet line names type varname default text
   }
 
