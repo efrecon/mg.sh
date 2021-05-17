@@ -10,8 +10,8 @@ fi
 if ! printf %s\\n "${MG_MODULES:-}"|grep -q "log"; then
   printf %s\\n "This module requires the log module" >&2
 fi
-if ! printf %s\\n "${MG_MODULES:-}"|grep -q "controls"; then
-  die "This module requires the controls module"
+if ! printf %s\\n "${MG_MODULES:-}"|grep -q "locals"; then
+  die "This module requires the locals module"
 fi
 
 parseopts() {
@@ -19,6 +19,9 @@ parseopts() {
   stack_let options
   stack_let marker "-"
   stack_let main 0
+  stack_let wrap 80
+  stack_let summary ""
+  stack_let description ""
 
   _quote() {
     if [ -z "$1" ]; then
@@ -34,20 +37,18 @@ parseopts() {
 
   _find() {
     stack_let nm
-    stack_let l_nm
 
     OIFS=$IFS
     IFS=,; for nm in $(printf %s\\n "$2"); do
-      l_nm=$(printf %s "${nm##-}" | wc -c); # No \n otherwise 1 char too long!
-      if [ "${1##-}" = "${nm##-}" ] && \
-          [ "$l_nm" -ge "${3:-0}" ] && \
-          [ "$l_nm" -le "${4:-999}" ]; then
-        printf %s\\n "${nm##-}"
+      nm=${nm##-}
+      if [ "${1##-}" = "$nm" ] && \
+          [ "${#nm}" -ge "${3:-0}" ] && \
+          [ "${#nm}" -le "${4:-999}" ]; then
+        printf %s\\n "$nm"
       fi
     done
     IFS=$OIFS
     stack_unlet nm
-    stack_unlet l_nm
   }
 
   _toupper() {
@@ -75,6 +76,42 @@ EOF
     fi
   }
 
+  _print_opt_list() {
+    stack_let nm
+    stack_let first 1
+
+    # Leading indentation
+    printf "%s" "${2:-}"
+    OIFS=$IFS
+    IFS=,; for nm in $(printf %s\\n "$1"); do
+      nm="${nm##-}"
+      [ "$first" = "0" ] && printf "| "
+      first=0
+      if [ "${#nm}" = "1" ]; then
+        #shellcheck disable=SC3045 # We want to print the dash!
+        printf '%s%s' "-" "$nm"
+      else
+        #shellcheck disable=SC3045 # We want to print the dash!
+        printf '%s%s' "--" "$nm"
+      fi
+    done
+    IFS=$OIFS
+    stack_unlet nm first
+    printf \\n
+  }
+
+  _wrap() {
+    stack_let max
+    stack_let l_indent
+
+    #shellcheck disable=SC2034 # We USE l_indent to compute wrapping max!
+    l_lindent=${#1}
+    #shellcheck disable=SC2154 # We USE l_indent to compute wrapping max!
+    max=$((wrap - l_indent))
+    printf "%s\n" "$2" |fold -s -w "$max"|sed -E "s/^(.*)$/$1\\1/g"
+    stack_unlet max l_indent
+  }
+
   _help() {
     # Avoid polluting main variables, add a stack!
     stack_let line
@@ -84,20 +121,26 @@ EOF
     stack_let default
     stack_let text
 
+    if [ -n "$summary" ]; then
+      _wrap "  " "$summary" >&2
+      printf "\n" >&2
+    fi
     printf "OPTIONS:\n" >&2
-    printf "\n" >&2
     while IFS="$(printf '\n')" read -r line; do
       if [ -n "$line" ]; then
         _fields "$line"; # Sets: names, type, varname, default and text
-        # FIXME: add single or double dash, remove commas
-        printf "  %s\n" "$names" >&2
-        # FIXME: Wrap at 80 columns.
-        printf "    %s\n" "$text" >&2
+        _print_opt_list "$names" "  " >&2
+        _wrap "    " "$text">&2
       fi
     done <<EOF
 $(printf %s\\n "$options"|sort)
 EOF
     printf "\n" >&2
+    if [ -n "$description" ]; then
+      printf "DESCRIPTION:\n" >&2
+      _wrap "  " "$description" >&2
+      printf "\n" >&2
+    fi
     stack_unlet line names type varname default text
     [ "$main" = "1" ] && die
   }
@@ -154,6 +197,15 @@ $options"
 
       -m | --main)
         main=1; shift;;
+
+      -w | --wrap)
+        wrap=$2; shift 2;;
+
+      -s | --summary)
+        summary=$2; shift 2;;
+
+      -d | --description)
+        description=$2; shift 2;;
 
       --)
         shift; break;;
@@ -298,5 +350,5 @@ EOF
   done
 
   stack_unlet line names type varname default text
-  stack_unlet prefix options marker
+  stack_unlet prefix options marker wrap summary description
 }

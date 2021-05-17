@@ -30,7 +30,7 @@ module() {
 }
 
 # Source in all relevant modules.
-module log controls options
+module log locals options
 
 callback() {
   echo "$1 => $2"
@@ -39,7 +39,7 @@ MG_VERBOSITY=trace
 parseopts \
   --prefix TOPT \
   --options \
-      h,help FLAG @HELP - "Gives this help and exit" \
+      h,help FLAG @HELP - "Gives this very long help to test if we properly wrap text when outputing stuff and exit" \
       s,sleep,wait OPTION WAIT 10 "How long to wait" \
       trigger OPTION @callback 46 "Generate a callback" \
   --main \
