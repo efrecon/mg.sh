@@ -15,10 +15,10 @@ backoff_loop() {
   # Default when nothing is specified is to loop forever every second.
 
   # All variables are declared local so that recursive calls are possible.
-  stack_let _wait 1
-  stack_let _max
-  stack_let _mult
-  stack_let _timeout
+  stack_let _wait=1
+  stack_let _max=
+  stack_let _mult=
+  stack_let _timeout=
 
   # Parse arguments
   while [ $# -gt 0 ]; do
@@ -94,7 +94,7 @@ backoff_loop() {
   # Good defaults
   [ -z "$_mult" ] && _mult=2;   # Default multiplier is 2
 
-  stack_let _waited 0
+  stack_let _waited=0
   while true; do
     # Execute the command and if it returns true, we are done and will exit
     # after cleanup.
