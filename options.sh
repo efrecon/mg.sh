@@ -14,6 +14,15 @@ if ! printf %s\\n "${MG_MODULES:-}"|grep -q "locals"; then
   die "This module requires the locals module"
 fi
 
+# Example call:
+# parseopts \
+#   --prefix TOPT \
+#   --options \
+#       h,help FLAG @HELP - "Gives this very long help to test if we properly wrap text when outputing stuff and exit" \
+#       s,sleep,wait OPTION WAIT 10 "How long to wait" \
+#       trigger OPTION @callback 46 "Generate a callback" \
+#   --main \
+#   -- "$@"
 parseopts() {
   stack_let prefix
   stack_let options
