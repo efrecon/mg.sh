@@ -1,58 +1,24 @@
 #!/usr/bin/env sh
 
-# This is a cleaned up version of https://stackoverflow.com/a/18600920. It
-# properly passes shellcheck's default set of rules.
-stack_let() {
-  dynvar_name=$1;
-  #shellcheck disable=SC2034
-  dynvar_value=${2:-""};
+# Protect against double loading and register dependencies
+if printf %s\\n "${MG_MODULES:-}"|grep -q "controls"; then
+  return
+else
+  MG_MODULES="${MG_MODULES:-} controls"
+fi
 
-  # Allow variables to be unset.
-  _oldstate=$(set +o); set +u
-
-  dynvar_count_var=${dynvar_name}_dynvar_count
-  if [ "$(eval echo "$dynvar_count_var")" ]; then
-    eval "$dynvar_count_var"='$(( $'"$dynvar_count_var"' + 1 ))'
-  else
-    eval "$dynvar_count_var"=0
-  fi
-
-  eval dynvar_oldval_var="${dynvar_name}"_oldval_'$'"$dynvar_count_var"
-  #shellcheck disable=SC2154
-  eval "$dynvar_oldval_var"='$'"$dynvar_name"
-
-  eval "$dynvar_name"='$'dynvar_value
-
-  # Restore set state
-  set +vx; eval "$_oldstate"  
-}
-
-stack_unlet() {
-  for dynvar_name; do
-    dynvar_count_var=${dynvar_name}_dynvar_count
-    eval dynvar_oldval_var="${dynvar_name}"_oldval_'$'"$dynvar_count_var"
-    eval "$dynvar_name"='$'"$dynvar_oldval_var"
-    eval unset "$dynvar_oldval_var"
-    eval "$dynvar_count_var"='$(( $'"$dynvar_count_var"' - 1 ))'
-  done
-}
-
-# Declare two aliases so we can call let/unlet (and accept shellcheck warnings)
-let() { stack_let "$@"; }
-unlet() { stack_unlet "$@"; }
+if ! printf %s\\n "${MG_MODULES:-}"|grep -q "locals"; then
+  printf %s\\n "This module requires the locals module" >&2
+fi
 
 backoff_loop() {
   # Default when nothing is specified is to loop forever every second.
 
   # All variables are declared local so that recursive calls are possible.
-  # shellcheck disable=SC2039
-  let _wait 1
-  # shellcheck disable=SC2039
-  let _max
-  # shellcheck disable=SC2039
-  let _mult
-  # shellcheck disable=SC2039
-  let _timeout
+  stack_let _wait 1
+  stack_let _max
+  stack_let _mult
+  stack_let _timeout
 
   # Parse arguments
   while [ $# -gt 0 ]; do
@@ -128,8 +94,7 @@ backoff_loop() {
   # Good defaults
   [ -z "$_mult" ] && _mult=2;   # Default multiplier is 2
 
-  # shellcheck disable=SC2039
-  let _waited 0
+  stack_let _waited 0
   while true; do
     # Execute the command and if it returns true, we are done and will exit
     # after cleanup.
@@ -159,5 +124,5 @@ backoff_loop() {
   done
 
   # Cleanup and exit
-  unlet _wait _max _mult _timeout _waited
+  stack_unlet _wait _max _mult _timeout _waited
 }

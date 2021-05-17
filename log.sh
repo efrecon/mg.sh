@@ -1,5 +1,12 @@
 #!/usr/bin/env sh
 
+# Protect against double loading and register dependencies
+if printf %s\\n "${MG_MODULES:-}"|grep -q "log"; then
+  return
+else
+  MG_MODULES="${MG_MODULES:-} log"
+fi
+
 # When run at the terminal, the default is to set MG_INTERACTIVE to be 1,
 # turning on colouring for all calls to the colouring functions contained here.
 if [ -t 1 ]; then
@@ -78,7 +85,7 @@ log_info() { _log info "$1" "${2:-$MG_APPNAME}"; }
 log_debug() { _log debug "$1" "${2:-$MG_APPNAME}"; }
 log_trace() { _log trace "$1" "${2:-$MG_APPNAME}"; }
 log() { log_info "$@"; } # For the lazy ones...
-die() { log_error "$1"; exit 1; }
+die() { [ -n "${1:-}" ] && log_error "$1"; exit 1; }
 
 check_verbosity() {
   printf %s\\n "$_LOG_LEVELS" | grep -qi "${1:-$MG_VERBOSITY}"
