@@ -393,13 +393,13 @@ EOF
         fi
         ;;
       --*=*)
+        stack_let val=
         found=
         jump=0
         opt="${1%=*}"; opt="${opt#--}"
         val="${1#*=}"
         while IFS="$(printf '\n')" read -r line && [ -z "$found" ]; do
           if [ -n "$line" ]; then
-            stack_let val=
             _fields "$line"; # Sets: names, type, varname, default and text
 
             candidate=$(_find "$opt" "$names" 2)
