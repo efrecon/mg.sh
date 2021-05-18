@@ -7,40 +7,45 @@ else
   MG_MODULES="${MG_MODULES:-} locals"
 fi
 
+# Set this to force home-made implementation in favour of local builtin
+__MG_LOCALS_FORCE=${__MG_LOCALS_FORCE:-0}
+
 # This is a cleaned up version of https://stackoverflow.com/a/18600920. It
 # properly passes shellcheck's default set of rules.
-if type local | grep -q "shell builtin"; then
+if [ "$__MG_LOCALS_FORCE" = "0" ] && type local | grep -q "shell builtin"; then
   alias stack_let=local
   alias stack_unlet=true
 else
   stack_let() {
-    case "$1" in
-      *=*)
-        dynvar_name="${1%=*}"
-        dynvar_value="${1#*=}"
-        ;;
-      *)
-        dynvar_name=$1;
-        #shellcheck disable=SC2034
-        dynvar_value=${2:-""}
-        ;;
-    esac
-
     # Allow variables to be unset.
     _oldstate=$(set +o); set +u
 
-    dynvar_count_var=${dynvar_name}_dynvar_count
-    if [ "$(eval echo "$dynvar_count_var")" ]; then
-      eval "$dynvar_count_var"='$(( $'"$dynvar_count_var"' + 1 ))'
-    else
-      eval "$dynvar_count_var"=0
-    fi
+    while [ "$#" -gt "0" ]; do
+      if printf %s\\n "$1" | grep -q "="; then
+        dynvar_name="${1%=*}"
+        # shellcheck disable=SC2034  # It IS used below!
+        dynvar_value="${1#*=}"
+      else
+        dynvar_name="$1"
+        # shellcheck disable=SC2034  # It IS used below!
+        dynvar_value=
+      fi
 
-    eval dynvar_oldval_var="${dynvar_name}"_oldval_'$'"$dynvar_count_var"
-    #shellcheck disable=SC2154
-    eval "$dynvar_oldval_var"='$'"$dynvar_name"
+      dynvar_count_var=${dynvar_name}_dynvar_count
+      if [ "$(eval echo "$dynvar_count_var")" ]; then
+        eval "$dynvar_count_var"='$(( $'"$dynvar_count_var"' + 1 ))'
+      else
+        eval "$dynvar_count_var"=0
+      fi
 
-    eval "$dynvar_name"='$'dynvar_value
+      eval dynvar_oldval_var="${dynvar_name}"_oldval_'$'"$dynvar_count_var"
+      #shellcheck disable=SC2154
+      eval "$dynvar_oldval_var"='$'"$dynvar_name"
+
+      eval "$dynvar_name"='$'dynvar_value
+
+      shift
+    done
 
     # Restore set state
     set +vx; eval "$_oldstate"
