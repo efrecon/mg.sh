@@ -36,6 +36,8 @@ parseopts() {
   stack_let reportvar=
   stack_let parsed=0
 
+  # Insert double-quotes around the first parameter if it is an empty string,
+  # none otherwise. Then return it.
   _quote() {
     if [ -z "${1:-}" ]; then
       printf "\"%s\"\n" "${1:-}"
@@ -44,14 +46,22 @@ parseopts() {
     fi
   }
 
+  # Remove leading and ending double-quotes from the string passed as a
+  # parameter and return it.
   _unquote() {
     printf %s\\n "$1" | sed -E -e 's/^"//' -e 's/"$//'
   }
 
+  # Detect if $2 exists in the comma separated list of tokens passed as $1.
+  # Detection is caseless.
   _has() {
     printf %s\\n "$2" | grep -qiE "(^|,)${1}(,|\$)"
   }
 
+  # Find the option $1 in the comma separated list of options passed as $2.
+  # Options are case-sensitive, but equality will trigger on option strings that
+  # are cleaned from all leading dashes. When $3 and $4 are present, they should
+  # be integers min and max lengths for the tokens in the list passed in $2.
   _find() {
     stack_let nm=
 
@@ -68,14 +78,20 @@ parseopts() {
     stack_unlet nm
   }
 
+  # Convert the string passed as a parameter to uppercase
   _toupper() {
     printf %s\\n "$1" | tr '[:lower:]' '[:upper:]'
   }
 
+  # Convert the string passed as a parameter to lowercase
   _tolower() {
     printf %s\\n "$1" | tr '[:upper:]' '[:lower:]'
   }
 
+  # Provided the argument $1 is a list of tab-separated tokens, isolate exactly
+  # 5 of these tokens in the variables names, type, varname, default and text.
+  # The last three of these variables are automatically unquoted (see
+  # _unquote())
   _fields() {
     IFS="$(printf '\t')" read -r names type varname default text <<EOF
 $(printf %s\\n "$1")
@@ -85,6 +101,9 @@ EOF
     text=$(_unquote "$text")
   }
 
+  # Generate a critical error with the message string passed as an argument.
+  # When the variable $main is set to 1, this will use the log module to produce
+  # an error and end the script. Otherwise, an error message will be generated.
   _critical() {
     if [ "$main" = "1" ]; then
       die "$1"
@@ -93,6 +112,10 @@ EOF
     fi
   }
 
+  # When the section description passed in $2 is not empty, print out a section
+  # of the help using the title in $2 in uppercase, and the text passed as $1,
+  # wrapped at the maximum output column. The section description is indented
+  # with 2 spaces to ease reading.
   _section() {
     if [ -n "$2" ]; then
       printf "\n" >&2
@@ -101,6 +124,10 @@ EOF
     fi
   }
 
+  # Given a comma separated list of options, nicely print them out after having
+  # removed any leading dash. Single-letter options will always have a
+  # single-dash, longer options a double-dash. Output is indented using the
+  # string in $2.
   _print_opt_list() {
     stack_let nm=
     stack_let first=1
@@ -125,6 +152,8 @@ EOF
     printf \\n
   }
 
+  # Wrap the text passed in $1, indented with the string passed in $2. Wrapping
+  # happens at the column $wrap.
   _wrap() {
     stack_let max=
     stack_let l_indent=
@@ -137,6 +166,13 @@ EOF
     stack_unlet max l_indent
   }
 
+  # Provided an internal, tab-separated token representation of the options
+  # contained in $options, output generic help. The help uses indentation to
+  # improve reading, and will automatically wrap long text at column $wrap.
+  # Output consists of a synopsis, a usage and a description of the options, and
+  # finally a generic description. The $synopsis, $usage and $description will
+  # only be output when the strings are not empty. When options are described,
+  # defaults for the option will automatically be appended to the option text.
   _help() {
     # Avoid polluting main variables, add a stack!
     stack_let line=
@@ -178,6 +214,11 @@ EOF
     fi
   }
 
+  # Whenever the raw variable name passed in $1 is nor empty, nor equal to the
+  # $marker (usually a dash), this will set the variable formed out of the
+  # prefix passed as $2 (if any) and the raw name passed as $1 to the value
+  # passed as $3. When the prefix is non-empty, it will be joined to the raw
+  # variable name using an underscore.
   _setvar() {
     if [ -n "$1" ] && [ "$1" != "$marker" ]; then
       stack_let thevar=
@@ -192,6 +233,10 @@ EOF
     fi
   }
 
+  # Provided the raw variable name in $varname, the "do not set variable" marker
+  # in $marker, the flags and type list in $type and the prefix in $prefix,
+  # return the underscore joined full variable name to set, whenever relevant.
+  # Otherwise, an empty string.
   _dstvar() {
     if [ "$(printf %s\\n "$varname"|cut -c 1)" != "@" ] \
           && [ -n "$varname" ] \
@@ -204,8 +249,16 @@ EOF
     fi
   }
 
+  # Provided the raw variable name in $varname and the prefix in $prefix, this
+  # will trigger or set the variable. The option that triggered the action
+  # should be passed (without leading dashes) in $1 and the value (for the
+  # trigger or the variable) passed in $2.
   _trigger() {
     if [ "$(printf %s\\n "$varname"|cut -c 1)" = "@" ]; then
+      # When the variable name starts with an arobas, this is a trigger.
+      # Internal triggers are in uppercase and implemented directly here,
+      # otherwise the trigger is a function which name is after the leading
+      # arobase and the function is triggered from here.
       stack_let cb=
       cb=$(printf %s\\n "$varname"|cut -c 2-)
       if [ "$cb" = "HELP" ]; then
@@ -216,6 +269,9 @@ EOF
       fi
       stack_unlet cb
     else
+      # Set the destination variable. Whenever the NOPREFIX is found in $type,
+      # no prefix will be appended. Otherwise, the prefix will be appended to
+      # the name of the variable if it is set.
       if _has NOPREFIX "$type"; then
         _setvar "$varname" "" "$2"
       else
@@ -297,7 +353,8 @@ $options"
     fi
   fi
 
-  # Automatically add verbosity control to main programs.
+  # Automatically add verbosity control to main programs. We might want to also
+  # automatically add --help support?
   if [ "$main" = "1" ]; then
     log_trace "Tweaking for main handling: verbosity and usage summary"
     if ! printf %s\\n "$options" | grep -q '^v[,[:space:]]'; then
