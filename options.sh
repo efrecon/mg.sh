@@ -282,14 +282,14 @@ EOF
 
   # Parse options of function itself
   log_trace "Parsing options to function"
-  while [ $# -gt 0 ]; do
+  while [ "$#" -gt "0" ]; do
     case "$1" in
       -p | --prefix)
         prefix=$2; shift 2;;
 
       -o | --options | --opts)
         shift;
-        while [ "${1#-}" = "$1" ]; do
+        while [ "$#" -gt "0" ] && [ "${1#-}" = "$1" ]; do
           # Check params and scream?
           options="$(printf \
                           "%s\t%s\t%s\t%s\t%s" \
