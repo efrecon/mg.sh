@@ -2,6 +2,7 @@
 
 Describe 'controls.sh'
   Include log.sh
+  Include locals.sh
   Include controls.sh
 
   Describe 'backoff_loop'
@@ -104,45 +105,6 @@ Describe 'controls.sh'
       When call backoff_loop --timeout 0
       The status should be failure
       The error should include positive
-    End
-  End
-
-  Describe 'let/unlet'
-    first() {
-      #shellcheck disable=SC2154
-      stack_let a first
-      echo "$a"
-      stack_unlet a
-    }
-    second() {
-      #shellcheck disable=SC2154
-      stack_let a second
-      first
-      echo "$a"
-      stack_unlet a
-    }
-    global_first() {
-      a=global
-      first
-      echo "$a"
-    }
-    global_second() {
-      a=global
-      second
-      echo "$a"
-    }
-    
-    It 'Pushes one state'
-      When call global_first
-      The line 1 should equal first
-      The line 2 should equal global
-    End
-
-    It 'Pushes two states'
-      When call global_second
-      The line 1 should equal first
-      The line 2 should equal second
-      The line 3 should equal global
     End
   End
 End
