@@ -432,7 +432,11 @@ EOF
             candidate=$(_find "${1#-}" "$names" 1 1)
             if [ -n "$candidate" ]; then
               if _has "FLAG" "$type"; then
-                _trigger "$candidate" "1"
+                if _has "INVERT" "$type"; then
+                  _trigger "$candidate" "0"
+                else
+                  _trigger "$candidate" "1"
+                fi
                 found=$candidate
                 jump=1
               elif _has 'OPT[A-Z]*' "$type"; then
@@ -476,10 +480,18 @@ EOF
               if _has "FLAG" "$type"; then
                 case "$(_tolower "$val")" in
                   true | on | yes | 1)
-                    _trigger "$candidate" "1"
+                    if _has "INVERT" "$type"; then
+                      _trigger "$candidate" "0"
+                    else
+                      _trigger "$candidate" "1"
+                    fi
                     found=$candidate;;
                   false | off | no | 0)
-                    _trigger "$candidate" "0"
+                    if _has "INVERT" "$type"; then
+                      _trigger "$candidate" "1"
+                    else
+                      _trigger "$candidate" "0"
+                    fi
                     found=$candidate;;
                   *)
                     _critical "Value in flag $1 not a recognised boolean!";;
@@ -514,7 +526,11 @@ EOF
             candidate=$(_find "${1#--}" "$names" 2)
             if [ -n "$candidate" ]; then
               if _has "FLAG" "$type"; then
-                _trigger "$candidate" "1"
+                if _has "INVERT" "$type"; then
+                  _trigger "$candidate" "0"
+                else
+                  _trigger "$candidate" "1"
+                fi
                 found=$candidate
                 jump=1
               elif _has 'OPT[A-Z]*' "$type"; then

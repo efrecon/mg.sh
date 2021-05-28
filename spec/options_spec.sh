@@ -110,6 +110,27 @@ Describe 'options.sh'
       The line 1 should equal "TEST_THEFLAG='0'"
       The error should include "boolean"
     End
+    It 'Inverts single-dash flag'
+      When call runprefixed \
+        --options \
+          f,flag,theflag FLAG,INVERT THEFLAG 0 "set flag" \
+        -- -f
+      The line 1 should equal "TEST_THEFLAG='0'"
+    End
+    It 'Inverts double-dashed flag'
+      When call runprefixed \
+        --options \
+          f,flag,theflag FLAG,INVERT THEFLAG 0 "set flag" \
+        -- --flag
+      The line 1 should equal "TEST_THEFLAG='0'"
+    End
+    It 'Inverts double-dashed explicit flag'
+      When call runprefixed \
+        --options \
+          f,flag,theflag FLAG,INVERT THEFLAG 0 "set flag" \
+        -- --flag=true
+      The line 1 should equal "TEST_THEFLAG='0'"
+    End
 
     It 'Set single-dash option'
       When call runprefixed \
