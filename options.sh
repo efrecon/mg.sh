@@ -35,6 +35,7 @@ parseopts() {
   stack_let terminator=1
   stack_let reportvar=
   stack_let parsed=0
+  stack_let vars=
 
   # Insert double-quotes around the first parameter if it is an empty string,
   # none otherwise. Then return it.
@@ -228,6 +229,7 @@ EOF
         thevar=$1
       fi
       log_trace "Setting $thevar to $3"
+      varlist="$varlist $thevar"; # Account for var, NOTE: varlist is "global"
       eval "$thevar='$3'"
       stack_unlet thevar
     fi
@@ -315,6 +317,9 @@ $options"
       --shift | --end)
         reportvar=$2; shift 2;;
 
+      --vars | --variables)
+        vars=$2; shift 2;;
+
       -w | --wrap)
         wrap=$2; shift 2;;
 
@@ -381,16 +386,17 @@ $options"
     MG_USAGE=$(_help 0 2>&1)
   fi
 
-  stack_let line=
-  stack_let names=
-  stack_let type=
-  stack_let varname=
-  stack_let default=
-  stack_let text=
-  stack_let found=
-  stack_let candidate=
-  stack_let opt=
-  stack_let jump=
+  stack_let line=      ; # line of internal option representation being parsed
+  stack_let names=     ; # comma-separated list of short/long options
+  stack_let type=      ; # comma-separated list of types (FLAG,OPTION) and flag
+  stack_let varname=   ; # unprefixed name of variable from option
+  stack_let default=   ; # default value to give to variable.
+  stack_let text=      ; # text to use for the help
+  stack_let found=     ; # option that actually was found, reset at each loop
+  stack_let candidate= ; # candidate option from possible list of names
+  stack_let opt=       ; # option (used for xxx=yy constructs)
+  stack_let jump=      ; # how many arguments to jump to reach next option
+  stack_let varlist=   ; # list of (external) variables being set
 
   # Set defaults, this will trigger function with the default value when such
   # exist.
@@ -407,6 +413,12 @@ $options"
   done <<EOF
 $(printf %s\\n "$options")
 EOF
+
+  # Reset the variable to collect the list of variables being set by the command
+  # line options as we are now going to parse options. We don't want to know
+  # about default values, but rather about which variables actually we set as a
+  # result of command-line option parsing.
+  varlist=
 
   while [ "$#" -gt "0" ]; do
     case "$1" in
@@ -531,11 +543,17 @@ EOF
     esac
   done
 
+  # Report back about what happened during the parsing phase
   if [ -n "$reportvar" ]; then
     log_trace "Reporting # parsed args: $parsed into $reportvar"
     eval "$reportvar='$parsed'"
   fi
+  if [ -n "$vars" ]; then
+    log_trace "Reporting list of set vars in $vars: $varlist"
+    eval "$vars='$(printf %s\\n "$varlist"| cut -c 2-)'"
+  fi
+
   stack_unlet line names type varname default text found candidate
   stack_unlet prefix options marker wrap synopsis description terminator \
-              reportvar parsed usage
+              reportvar parsed usage vars varlist
 }

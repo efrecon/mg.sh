@@ -39,6 +39,14 @@ Describe 'options.sh'
       echo "$_begin"
     }
 
+    reporter() {
+      parseopts \
+        --vars _varlist \
+        "$@"
+      #shellcheck disable=SC2154 # This is set by parseopts
+      echo "$_varlist"
+    }
+
     It 'Set single-dash flag'
       When call runprefixed \
         --options \
@@ -298,6 +306,27 @@ Describe 'options.sh'
         -- --flag --option hello
       The line 1 should equal "TEST_THEFLAG='1'"
       The line 2 should equal "TEST_THEOPT='hello'"
+    End
+
+    It 'Reports variables'
+      When call reporter \
+        --prefix TEST \
+        --options \
+          o,option,theoption OPTION THEOPT test "set option" \
+          f,flag,theflag FLAG THEFLAG 0 "set flag" \
+          h,help FLAG @HELP - "Print this help" \
+        -- --flag --option hello
+      The line 1 should equal "TEST_THEFLAG TEST_THEOPT"
+    End
+    It 'Does not report default variables'
+      When call reporter \
+        --prefix TEST \
+        --options \
+          o,option,theoption OPTION THEOPT test "set option" \
+          f,flag,theflag FLAG THEFLAG 0 "set flag" \
+          h,help FLAG @HELP - "Print this help" \
+        -- --option hello
+      The line 1 should equal "TEST_THEOPT"
     End
   End
 End
