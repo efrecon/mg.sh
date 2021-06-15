@@ -107,4 +107,18 @@ Describe 'controls.sh'
       The error should include positive
     End
   End
+
+  Describe "var_exists"
+    TEST=test
+
+    It "Detects that the variable TEST exists"
+      When call var_exists TEST
+      The status should be success
+    End
+
+    It "Detects that the variable NOTEST does not exist"
+      When call var_exists NOTEST
+      The status should be failure
+    End
+  End
 End

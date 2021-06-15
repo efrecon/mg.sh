@@ -126,3 +126,5 @@ backoff_loop() {
   # Cleanup and exit
   stack_unlet _wait _max _mult _timeout _waited
 }
+
+var_exists() { eval "[ -n \"\$${1:-}\" ]"; }
