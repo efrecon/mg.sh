@@ -422,40 +422,52 @@ EOF
 
   while [ "$#" -gt "0" ]; do
     case "$1" in
-      -[a-zA-Z0-9])
-        found=
-        jump=0
-        while IFS="$(printf '\n')" read -r line && [ -z "$found" ]; do
-          if [ -n "$line" ]; then
-            _fields "$line"; # Sets: names, type, varname, default and text
+      -[a-zA-Z0-9]*)
+        # Remember the set of options/flags behind the first dash character and
+        # shift once, ready to read values for what could be an option.
+        stack_let opts="${1#-}"
+        stack_let char
+        shift 1;
+        parsed=$((parsed + 1))
 
-            candidate=$(_find "${1#-}" "$names" 1 1)
-            if [ -n "$candidate" ]; then
-              if _has "FLAG" "$type"; then
-                if _has "INVERT" "$type"; then
-                  _trigger "$candidate" "0"
-                else
-                  _trigger "$candidate" "1"
+        while IFS="$(printf '\n')" read -r char; do
+          found=
+          jump=0
+          while IFS="$(printf '\n')" read -r line && [ -z "$found" ]; do
+            if [ -n "$line" ]; then
+              _fields "$line"; # Sets: names, type, varname, default and text
+
+              candidate=$(_find "$char" "$names" 1 1)
+              if [ -n "$candidate" ]; then
+                if _has "FLAG" "$type"; then
+                  if _has "INVERT" "$type"; then
+                    _trigger "$candidate" "0"
+                  else
+                    _trigger "$candidate" "1"
+                  fi
+                  found=$candidate
+                elif _has 'OPT[A-Z]*' "$type"; then
+                  # It was an option, take the next arg from the command line as
+                  # its value and shift once, ready to pick the value for any
+                  # other option.
+                  _trigger "$candidate" "$1"
+                  found=$candidate
+                  parsed=$((parsed + 1))
+                  shift 1
                 fi
-                found=$candidate
-                jump=1
-              elif _has 'OPT[A-Z]*' "$type"; then
-                _trigger "$candidate" "$2"
-                found=$candidate
-                jump=2
               fi
             fi
-          fi
-        done <<EOF
+          done <<EOF
 $(printf %s\\n "$options")
 EOF
-        if [ -n "$found" ]; then
-          parsed=$((parsed + jump))
-          shift $jump
-        else
-          _critical "$1 is an unknown option"
-          break
-        fi
+          if [ -z "$found" ]; then
+            _critical "$char is an unknown option"
+            break
+          fi
+        done <<EOF
+$(printf %s\\n "$opts" | fold -w1)
+EOF
+        stack_unlet opts char
         ;;
       --)
         if [ "$terminator" = "1" ]; then

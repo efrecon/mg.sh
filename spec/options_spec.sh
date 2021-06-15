@@ -318,13 +318,33 @@ Describe 'options.sh'
       The stderr should include "myflag is an unknown option"
     End
 
-    It 'Sets flags and options'
+    It 'Sets flags and options (long)'
       When call runprefixed \
         --options \
           o,option,theoption OPTION THEOPT test "set option" \
           f,flag,theflag FLAG THEFLAG 0 "set flag" \
           h,help FLAG @HELP - "Print this help" \
         -- --flag --option hello
+      The line 1 should equal "TEST_THEFLAG='1'"
+      The line 2 should equal "TEST_THEOPT='hello'"
+    End
+    It 'Sets flags and options (short)'
+      When call runprefixed \
+        --options \
+          o,option,theoption OPTION THEOPT test "set option" \
+          f,flag,theflag FLAG THEFLAG 0 "set flag" \
+          h,help FLAG @HELP - "Print this help" \
+        -- -f -o hello
+      The line 1 should equal "TEST_THEFLAG='1'"
+      The line 2 should equal "TEST_THEOPT='hello'"
+    End
+    It 'Sets flags and options (concatenated)'
+      When call runprefixed \
+        --options \
+          o,option,theoption OPTION THEOPT test "set option" \
+          f,flag,theflag FLAG THEFLAG 0 "set flag" \
+          h,help FLAG @HELP - "Print this help" \
+        -- -fo hello
       The line 1 should equal "TEST_THEFLAG='1'"
       The line 2 should equal "TEST_THEOPT='hello'"
     End
