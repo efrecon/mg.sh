@@ -20,6 +20,7 @@ Describe 'portability.sh'
   End
 
   Describe 'envsubst'
+    # shellcheck disable=SC2034 # We use TEST in the templates
     test_subst() { TEST=${2:-test} && printf %s\\n "$1" | mg_envsubst; }
 
     It "Replaces the TEST variable once"
