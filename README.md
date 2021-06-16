@@ -10,33 +10,31 @@ your main script. You should insert this as early on as possible, e.g. typically
 right after the shebang and initial documenting comment. The example loads two
 scripts from this library, i.e. [`log`](#logging-library) and
 [`controls`](#controls-library). Apart from variable naming, you will have to
-pay specific attention to provide good defaults as `LIBPATH`.
+pay specific attention to provide good defaults as `MG_LIBPATH`.
 
 ```shell
-# Build a default colon separated YOURSCRIPT_LIBPATH using the root directory to
-# look for modules that this script depends on. YOURSCRIPT_LIBPATH can be set
+# Build a default colon separated MG_LIBPATH using the root directory to
+# look for modules that this script depends on. MG_LIBPATH can be set
 # from the outside to facilitate location. Note that this only works when there
 # is support for readlink -f, see https://github.com/ko1nksm/readlinkf for a
 # POSIX alternative.
-YOURSCRIPT_ROOTDIR=$( cd -P -- "$(dirname -- "$(command -v -- "$(readlink -f "$0")")")" && pwd -P )
-YOURSCRIPT_LIBPATH=${YOURSCRIPT_LIBPATH:-/usr/local/share/mg.sh:${YOURSCRIPT_ROOTDIR}/lib/mg.sh}
+MG_ROOTDIR=$( cd -P -- "$(dirname -- "$(command -v -- "$(readlink -f "$0")")")" && pwd -P )
+MG_LIBPATH=${MG_LIBPATH:-/usr/local/share/mg.sh:${MG_ROOTDIR}/lib/mg.sh}
 
-# Look for modules passed as parameters in the YOURSCRIPT_LIBPATH and source them.
+# Look for modules passed as parameters in the MG_LIBPATH and source them.
 # Modules are required so fail as soon as it was not possible to load a module
 module() {
   for module in "$@"; do
-    OIFS=$IFS
-    IFS=:
-    for d in $YOURSCRIPT_LIBPATH; do
+    for d in $(printf %s\\n "$MG_LIBPATH" | awk '{split($1,DIRS,/:/); for ( D in DIRS ) {printf "%s\n", DIRS[D];} }'); do
       if [ -f "${d}/${module}.sh" ]; then
         # shellcheck disable=SC1090
         . "${d}/${module}.sh"
-        IFS=$OIFS
+        unset module; # Use the variable as a marker for module found.
         break
       fi
     done
-    if [ "$IFS" = ":" ]; then
-      echo "Cannot find module $module in $YOURSCRIPT_LIBPATH !" >& 2
+    if [ -n "${module:-}" ]; then
+      echo "Cannot find module $module in $MG_LIBPATH !" >& 2
       exit 1
     fi
   done
