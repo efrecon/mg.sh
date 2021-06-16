@@ -2,6 +2,7 @@
 
 Describe 'portability.sh'
   Include locals.sh
+  Include filesystem.sh
   Include portability.sh
 
   Describe 'base64'
@@ -42,5 +43,64 @@ Describe 'portability.sh'
       When call test_subst "this is a \$NOTTEST"
       The output should eq "this is a "
     End
+  End
+
+  Describe 'read_f'
+    readnprint() {
+      read_s -r _varname <<EOF
+$(printf %s\\n "$1")
+EOF
+      # shellcheck disable=SC2154 # set by read above
+      printf %s\\n "$_varname"
+    }
+
+    It "Reads from stdin"
+      When call readnprint "test"
+      The output should eq "test"
+    End
+  End
+
+  Describe 'readlink_f'
+    # Create a temporary directory and symbolic links of various sorts inside
+    # the directory.
+    tmpdir=$(mktemp -d)
+    ln -s "${tmpdir}/thefile" "${tmpdir}/theabslink"
+    ln -s "${tmpdir}" "${tmpdir}/theabsdir"
+    ( cd "$tmpdir" || return
+      touch "thefile"
+      ln -s "thefile" "thelink"
+      ln -s "." "thedirlink"
+    )
+
+    It "Resolves existing files"
+      When call readlink_f "${tmpdir}/thefile"
+      The output should eq "${tmpdir}/thefile"
+    End
+    It "Resolves existing file links"
+      When call readlink_f "${tmpdir}/thelink"
+      The output should eq "${tmpdir}/thefile"
+    End
+    It "Resolves existing file absolute links"
+      When call readlink_f "${tmpdir}/theabslink"
+      The output should eq "${tmpdir}/thefile"
+    End
+    It "Resolves existing dir links"
+      When call readlink_f "${tmpdir}/thedirlink"
+      The output should eq "${tmpdir}"
+    End
+    It "Resolves existing dir abs links"
+      When call readlink_f "${tmpdir}/theabsdir"
+      The output should eq "${tmpdir}"
+    End
+    It "Resolves recursively links"
+      When call readlink_f "${tmpdir}/thedirlink/thelink"
+      The output should eq "${tmpdir}/thefile"
+    End
+    It "Resolves recursively abs links"
+      When call readlink_f "${tmpdir}/theabsdir/theabslink"
+      The output should eq "${tmpdir}/thefile"
+    End
+
+    rm -rf "$tmpdir"
   End
 End
