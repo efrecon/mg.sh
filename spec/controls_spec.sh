@@ -109,15 +109,47 @@ Describe 'controls.sh'
   End
 
   Describe "var_exists"
-    TEST=test
+    unset TEST || true
 
-    It "Detects that the variable TEST exists"
+    It "Detects that the variable TEST does not exists"
+      When call var_exists TEST
+      The status should be failure
+    End
+
+    # shellcheck disable=SC2034 # Variable is tested here under
+    TEST=
+    It "Detects that the variable TEST exists when empty"
       When call var_exists TEST
       The status should be success
     End
 
-    It "Detects that the variable NOTEST does not exist"
-      When call var_exists NOTEST
+    # shellcheck disable=SC2034 # Variable is tested here under
+    TEST="test"
+    It "Detects that the variable TEST exists"
+      When call var_exists TEST
+      The status should be success
+    End
+  End
+
+  Describe "var_empty"
+    unset TEST || true
+
+    It "Detects that the variable TEST is empty when it does not exists"
+      When call var_empty TEST
+      The status should be success
+    End
+
+    # shellcheck disable=SC2034 # Variable is tested here under
+    TEST=
+    It "Detects that the variable TEST is empty"
+      When call var_empty TEST
+      The status should be success
+    End
+
+    # shellcheck disable=SC2034 # Variable is tested here under
+    TEST="test"
+    It "Detects that the variable TEST is not empty"
+      When call var_empty TEST
       The status should be failure
     End
   End

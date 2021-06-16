@@ -127,4 +127,7 @@ backoff_loop() {
   stack_unlet _wait _max _mult _timeout _waited
 }
 
-var_exists() { eval "[ -n \"\$${1:-}\" ]"; }
+# Test variables without eval
+var_exists() { set | grep -q "^${1}="; }
+var_strictly_empty() { set | grep -q "^${1}=''"; }
+var_empty() { ! var_exists "$1" || var_strictly_empty "$1"; }
