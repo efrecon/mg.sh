@@ -22,9 +22,9 @@ Describe 'text.sh'
       The output should eq ""
     End
 
-    It "Generate a string containing a-z0-9A-Z characters only"
+    It "Generate a string containing a-z0-9A-Z,._+:@%- characters only"
       When call rndstr
-      The output should match pattern '[a-z0-9A-Z][a-z0-9A-Z][a-z0-9A-Z][a-z0-9A-Z][a-z0-9A-Z][a-z0-9A-Z][a-z0-9A-Z][a-z0-9A-Z]'
+      The output should match pattern '[a-z0-9A-Z,._+:@%-][a-z0-9A-Z,._+:@%-][a-z0-9A-Z,._+:@%-][a-z0-9A-Z,._+:@%-][a-z0-9A-Z,._+:@%-][a-z0-9A-Z,._+:@%-][a-z0-9A-Z,._+:@%-][a-z0-9A-Z,._+:@%-]'
     End
 
     It "Can restrict the output to other sets"

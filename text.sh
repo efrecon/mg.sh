@@ -22,7 +22,7 @@ rndstr() {
   parseopts \
     --options \
       l,len,length OPTION _len 8 "Length of random string" \
-      c,charset OPTION _charset "A-Za-z0-9" "Set of allowed characters (tr compatible)" \
+      c,charset OPTION _charset "A-Za-z0-9,._+:@%/-" "Set of allowed characters (tr compatible)" \
       h,help FLAG @HELP - "Print this help" \
     -- "$@"
 
