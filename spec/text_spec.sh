@@ -104,4 +104,34 @@ Describe 'text.sh'
       The status should be success
     End
   End
+
+  Describe "to_upper"
+    It "Converts one argument to upper"
+      When call to_upper "test"
+      The output should eq "TEST"
+    End
+    It "Converts all arguments to upper"
+      When call to_upper "test"   "test"
+      The output should eq "TEST TEST"
+    End
+    It "Returns an empty string when called with empty argument"
+      When call to_upper ""
+      The output should eq ""
+    End
+  End
+
+  Describe "to_lower"
+    It "Converts one argument to lower"
+      When call to_lower "TEST"
+      The output should eq "test"
+    End
+    It "Converts all arguments to lower"
+      When call to_lower "TEST"  "TEST"
+      The output should eq "test test"
+    End
+    It "Returns an empty string when called with empty argument"
+      When call to_upper ""
+      The output should eq ""
+    End
+  End
 End
