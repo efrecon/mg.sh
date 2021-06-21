@@ -22,7 +22,7 @@ rndstr() {
   parseopts \
     --options \
       l,len,length OPTION _len 8 "Length of random string" \
-      c,charset OPTION _charset "A-Za-z0-9,._+:@%/-" "Set of allowed characters (tr compatible)" \
+      c,charset OPTION _charset "A-Za-z0-9,._+:@%-" "Set of allowed characters (tr compatible)" \
       h,help FLAG @HELP - "Print this help" \
     -- "$@"
 
@@ -30,3 +30,20 @@ rndstr() {
   LC_ALL=C tr -dc "${_charset}" </dev/urandom 2>/dev/null | head -c"$((_len*3))" | tr -d '\n' | tr -d '\0' | head -c"$_len"
   stack_unlet _len _charset
 }
+
+unboolean() {
+  while [ "$#" -gt "0" ]; do
+    case "$(printf %s\\n "$1" | tr '[:upper:]' '[:lower:]')" in
+      on|true|t|yes|y)
+        printf 1\\n;;
+      off|false|f|no|n)
+        printf 0\\n;;
+      *)
+        return 1; break;;
+    esac
+    shift
+  done
+}
+
+is_true() { test "$(unboolean "$1")" = "1"; }
+is_false() { test "$(unboolean "$1")" = "0"; }
