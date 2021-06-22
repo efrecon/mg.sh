@@ -43,6 +43,7 @@ tr_echo() {
     stack_let _toClass="$2"
     shift 2
 
+    # shellcheck disable=SC2154 # from and to class declared local
     {
       while [ "$#" -gt "0" ]; do
         printf "%s " "$1"; shift
