@@ -36,7 +36,10 @@ module() {
 
 module locals log options controls filesystem portability text interaction
 
-if type "$MG_APPNAME" 1>&2 >/dev/null; then
+# Prefer internal implementation when it exists!
+if type "mg_$MG_APPNAME" 1>&2 >/dev/null; then
+  "mg_$MG_APPNAME" "$@"
+elif type "$MG_APPNAME" 1>&2 >/dev/null; then
   "$MG_APPNAME" "$@"
 else
   dir "$MG_APPNAME is not a function of the mg.sh API"
