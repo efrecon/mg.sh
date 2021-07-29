@@ -78,10 +78,23 @@ readlink_f() {
 
 # This is an expansion safe envsubst implementation in pure-shell and inspired
 # by https://stackoverflow.com/a/40167919. It uses eval in a controlled-manner
-# to avoid side-effects.
+# to avoid side-effects. It also supports SHELL-FORMAT, i.e. recognises inside
+# the first argument, the (restricted) list of environment variables that should
+# be replaced (i.e. all variables written as $FOO or ${FOO} inside the value of
+# the first argument)
 # shellcheck disable=SC2120
 mg_envsubst() {
   stack_let line
+  stack_let varlist='[A-Z_][A-Z0-9_]*'
+
+  if [ "$#" -ge "1" ]; then
+    # shellcheck disable=SC2016
+    varlist=$(  printf %s\\n "$1" |
+                  grep -Eo -e '\$[A-Z_][A-Z0-9_]*' -e '\${[A-Z_][A-Z0-9_]*}' |
+                  sed -E -e 's/^\$//g' -e 's/^\{([A-Z_][A-Z0-9_]*)\}/\1/g'|
+                  awk -v d="|" '{s=(NR==1?s:s d)$0}END{print s}')
+  fi
+
   while IFS= read -r line || [ -n "$line" ]; do  # Read, incl. non-empty last line
     stack_let _lineEscaped
     stack_let _lineResolved
@@ -92,7 +105,7 @@ mg_envsubst() {
     # understands \$ quoting, but will fail within single quotes. Then
     # escape ALL characters that could trigger an expansion.
     IFS= read -r _lineEscaped << EOF
-$(printf %s "$line" | sed -E -e 's/([^\\])\$([A-Z_][A-Z0-9_]*)/\1\${\2}/g' -e 's/^\$([A-Z_][A-Z0-9_]*)/\${\1}/g' | tr '`([$' '\1\2\3\4')
+$(printf %s "$line" | sed -E -e "s/([^\\\\])\\\$(${varlist})/\\1\\\${\\2}/g" -e "s/^\\\$(${varlist})/\\\${\\1}/g" | tr '`([$' '\1\2\3\4')
 EOF
     # ... then selectively reenable ${ references
     _lineEscaped=$(printf %s\\n "$_lineEscaped" | sed -e 's/\x04{/${/g' -e 's/"/\\\"/g')
@@ -109,6 +122,8 @@ EOF
     printf %s\\n "$_lineResolved" | tr '\1\2\3\4' '`([$'
     stack_unlet _lineEscaped _lineResolved _oldstate
   done
+
+  stack_unlet varlist
   stack_unlet line
 }
 
