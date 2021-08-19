@@ -59,6 +59,10 @@ Describe 'text.sh'
       When call unboolean n
       The output should eq "0"
     End
+    It "Understands 0"
+      When call unboolean 0
+      The output should eq "0"
+    End
     It "Understands true"
       When call unboolean true
       The output should eq "1"
@@ -77,6 +81,14 @@ Describe 'text.sh'
     End
     It "Understands y"
       When call unboolean y
+      The output should eq "1"
+    End
+    It "Understands 1"
+      When call unboolean 1
+      The output should eq "1"
+    End
+    It "Understands any number"
+      When call unboolean 234
       The output should eq "1"
     End
     It "Does not understand test"
