@@ -1,5 +1,18 @@
 # Developer Notes
 
+## Hooks
+
+This projects only uses pure semantic version numbers for releasing. Git [hooks]
+are available to enforce this rule. Provided you do not have any hooks setup
+yourself, running the following command once will ensure proper behaviour from
+now on.
+
+```console
+git config --local core.hooksPath .githooks
+```
+
+  [hooks]: http://git-scm.com/docs/githooks
+
 ## Release Process
 
 To make a release:
