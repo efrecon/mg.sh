@@ -47,6 +47,12 @@ parseopts() {
     printf %s\\n "$2" | grep -qiE "(^|,)${1}(,|\$)"
   }
 
+  # Provided the regular expression $2 exists in the comma separated list of
+  # tokens passed as $1, return its exact value.
+  _get() {
+    printf %s\\n "$2" | grep -oiE "(^|,)${1}(,|\$)" | sed -E -e 's/^,//' -e 's/,$//'
+  }
+
   # Find the option $1 in the comma separated list of options passed as $2.
   # Options are case-sensitive, but equality will trigger on option strings that
   # are cleaned from all leading dashes. When $3 and $4 are present, they should
@@ -138,7 +144,6 @@ EOF
     done
     IFS=$OIFS
     stack_unlet nm first
-    printf \\n
   }
 
   # Wrap the text passed in $1, indented with the string passed in $2. Wrapping
@@ -180,6 +185,17 @@ EOF
       if [ -n "$line" ]; then
         _fields "$line"; # Sets: names, type, varname, default and text
         _print_opt_list "$names" "  " >&2
+        if _has 'OPT[A-Z]*' "$type"; then
+          printf ' <' >&2
+          if _has 'TYPE:[^,]*' "$type"; then
+            _get 'TYPE:[^,]*' "$type" | tr '[:upper:]' '[:lower:]' | sed -e 's/^type://' | tr -d '\n' >&2
+          else
+            printf 'string' >&2
+          fi
+          printf '>\n' >&2
+        else
+          printf '\n' >&2
+        fi
         defvar=$(_dstvar)
         if [ -n "$defvar" ]; then
           if set | grep -q "^${defvar}="; then
@@ -236,6 +252,38 @@ EOF
       else
         printf "%s_%s\\n" "${prefix%_}" "${varname#_}"
       fi
+    fi
+  }
+
+  # Implementation of all known types for validation function. Use with TYPE:xxx
+  # in the comma-separated list passed to parseopts.
+  _validate_integer() {
+    printf %s\\n "$1" | grep -qE '^-?[0-9]+'
+  }
+  _validate_string() {
+    return 0
+  }
+  _validate_file() {
+    test -f "$1"
+  }
+  _validate_directory() {
+    test -d "$1"
+  }
+
+  # Provided the <type> variable exists, this will check if the option which
+  # name is passed as a first argument and value as a second argument, matches
+  # the requested type. The type should appear as TYPE:xxx where xxx is one of
+  # the recognised types. Recognised types are the ones that exists as functions
+  # in this module as _validate_xxx. Function names should always be in
+  # lowercase.
+  _validate() {
+    if _has 'TYPE:[^,]*' "$type"; then
+      stack_let validator
+      validator=$(_get 'TYPE:[^,]*' "$type" | tr '[:upper:]' '[:lower:]' | sed -e 's/^type://')
+      if ! "_validate_$validator" "$2"; then
+        _critical "Value passed to option $1 is not a $validator"
+      fi
+      stack_unlet validator
     fi
   }
 
@@ -438,8 +486,10 @@ EOF
                   # It was an option, take the next arg from the command line as
                   # its value and shift once, ready to pick the value for any
                   # other option.
-                  _trigger "$candidate" "$1"
-                  found=$candidate
+                  if _validate "$candidate" "$1"; then
+                    _trigger "$candidate" "$1"
+                    found=$candidate
+                  fi
                   parsed=$((parsed + 1))
                   shift 1
                 fi
@@ -498,8 +548,10 @@ EOF
                 esac
                 jump=1
               elif _has 'OPT[A-Z]*' "$type"; then
-                _trigger "$candidate" "$val"
-                found=$candidate
+                if _validate "$candidate" "$val"; then
+                  _trigger "$candidate" "$val"
+                  found=$candidate
+                fi
                 jump=1
               fi
             fi
@@ -534,8 +586,10 @@ EOF
                 found=$candidate
                 jump=1
               elif _has 'OPT[A-Z]*' "$type"; then
-                _trigger "$candidate" "$2"
-                found=$candidate
+                if _validate "$candidate" "$2"; then
+                  _trigger "$candidate" "$2"
+                  found=$candidate
+                fi
                 jump=2
               fi
             fi
