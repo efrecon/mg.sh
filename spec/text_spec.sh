@@ -1,10 +1,8 @@
 #shellcheck shell=sh
 
 Describe 'text.sh'
-  Include locals.sh
-  Include log.sh
-  Include options.sh
-  Include text.sh
+  Include bootstrap.sh
+  module text
 
   Describe 'rndstr'
     It "Generates a string of 8 chars"

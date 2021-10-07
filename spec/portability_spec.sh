@@ -1,9 +1,8 @@
 #shellcheck shell=sh
 
 Describe 'portability.sh'
-  Include locals.sh
-  Include filesystem.sh
-  Include portability.sh
+  Include bootstrap.sh
+  module portability
 
   Describe 'base64'
     # Define a helper function to encapsulate the pipe

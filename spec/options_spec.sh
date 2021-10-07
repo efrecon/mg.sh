@@ -1,9 +1,8 @@
 #shellcheck shell=sh
 
 Describe 'options.sh'
-  Include log.sh
-  Include locals.sh
-  Include options.sh
+  Include bootstrap.sh
+  module options
 
   Describe 'parseopts'
     trigger() {

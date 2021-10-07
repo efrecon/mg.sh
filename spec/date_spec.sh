@@ -1,8 +1,8 @@
 #shellcheck shell=sh
 
 Describe 'date.sh'
-  Include locals.sh
-  Include date.sh
+  Include bootstrap.sh
+  module date
 
   Describe 'human_period'
     It "Returns minutes"

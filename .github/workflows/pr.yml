@@ -1,0 +1,27 @@
+# Run all shellspec tests on PRs.
+name: Pull Request
+
+on:
+  pull_request:
+
+
+jobs:
+  test:
+    name: Test
+    if: "!contains(github.event.head_commit.message, 'skip-ci')"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Unit Tests
+        run: |
+          docker run \
+            --rm \
+            -v $(pwd):/mg.sh:ro \
+            -w /mg.sh \
+            -u $(id -u):$(id -g) \
+            shellspec/shellspec \
+              --format d

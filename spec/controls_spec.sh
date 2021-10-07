@@ -1,9 +1,8 @@
 #shellcheck shell=sh
 
 Describe 'controls.sh'
-  Include log.sh
-  Include locals.sh
-  Include controls.sh
+  Include bootstrap.sh
+  module controls
 
   Describe 'backoff_loop'
     success() { echo "output" && return 0; }

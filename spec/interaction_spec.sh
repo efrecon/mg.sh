@@ -1,13 +1,8 @@
 #shellcheck shell=sh
 
 Describe 'interaction.sh'
-  Include locals.sh
-  Include log.sh
-  Include options.sh
-  Include controls.sh
-  Include filesystem.sh
-  Include portability.sh
-  Include interaction.sh
+  Include bootstrap.sh
+  module interaction
 
   Describe 'prompt'
     askvar() {

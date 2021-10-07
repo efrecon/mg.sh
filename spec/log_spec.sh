@@ -1,7 +1,8 @@
 #shellcheck shell=sh
 
 Describe 'log.sh'
-    Include 'log.sh'
+    Include bootstrap.sh
+    module log
 
     It 'Prints default usage'
         When run usage
