@@ -1,9 +1,12 @@
 # Mitigram Shell Library
 
-This project contains a number of scripts snippets that can be directly
-sourced in target scripts and provide reusable code. These snippets mainly
-target POSIX shell scripts, but using them from other shells such as `bash`
-should be fine. The libraries have unit [tests](#testing).
+This project contains a number of scripts snippets that can be directly sourced
+in target scripts and provide reusable code. These snippets mainly target POSIX
+shell scripts, but using them from other shells such as `bash` should be fine.
+The libraries have unit [tests](#testing). Do you want to hack on the library?
+Be sure to start with reading the developer's [notes].
+
+  [notes]: ./DEVNOTES.md
 
 ## Bootstraping
 
