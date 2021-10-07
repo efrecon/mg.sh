@@ -27,7 +27,7 @@ scripts from this library, i.e. [`log`](#logging-library) and
 [`controls`](#controls-library) after having manually bootstrapped.
 
 ```shell
-# Bootstrap from a kown location relative your main script. Note that this only
+# Bootstrap from a known location relative your main script. Note that this only
 # works when there is support for readlink -f, see the portability module or
 # https://github.com/ko1nksm/readlinkf for a POSIX alternative.
 MG_ROOTDIR=$( cd -P -- "$(dirname -- "$(command -v -- "$(readlink -f "$0")")")" && pwd -P )
@@ -275,10 +275,17 @@ shellspec
 ```
 
 If you haven't `shellspec` installed, but can run docker, the following command
-will create a self-destructive container to run the tests in.
+will create a self-destructive container to run the tests in. The example
+changes the output format to show how to pass arguments to `shellspec`.
 
 ```shell
-docker run -it --rm -v $(pwd):/mg.sh -w /mg.sh -u $(id -u):$(id -g) shellspec/shellspec
+docker run \
+  -it --rm \
+  -v $(pwd):/mg.sh:ro \
+  -w /mg.sh \
+  -u $(id -u):$(id -g) \
+  shellspec/shellspec
+    --format d
 ```
 
   [shellspec]: https://shellspec.info/

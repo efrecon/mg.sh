@@ -1,9 +1,15 @@
 #!/bin/sh
 
+# Set this to 1 in order to debug internals
+__MG_BOOTSTRAP_DEBUG=${__MG_BOOTSTRAP_DEBUG:-0}
+
 # Declare MG_LIBPATH
 if [ -n "${BASH:-}" ]; then
   # shellcheck disable=SC3028,SC3054 # We know BASH_SOURCE only exists under bash!
   MG_LIBPATH=${MG_LIBPATH:-$(dirname "${BASH_SOURCE[0]}")}
+  if [ "$__MG_BOOTSTRAP_DEBUG" = "1" ]; then
+    printf "Used bash to locate mg.sh at %s\n" "$MG_LIBPATH" >&2
+  fi
 elif command -v "lsof" >/dev/null 2>&1; then
   # Introspect by asking which file descriptors the current process has opened.
   # This is an evolution of https://unix.stackexchange.com/a/351658 and works as
@@ -26,8 +32,12 @@ elif command -v "lsof" >/dev/null 2>&1; then
                                         tr -d '\0' |
                                         sed -E 's/^f([0-9]+)n(.*)/\1 \2/g' |
                                         grep -vE -e '\s+(/dev|pipe:|socket:)' -e '[a-z/]*/bin/(tr|grep|lsof|tail|sed|awk)' |
+                                        grep "bootstrap.sh" |
                                         tail -n 1 |
                                         awk '{print $NF}')")}
+  if [ "$__MG_BOOTSTRAP_DEBUG" = "1" ]; then
+    printf "Used lsof to locate mg.sh at %s\n" "$MG_LIBPATH" >&2
+  fi
 else
   # Introspect by checking which file descriptors the current process has
   # opened as of under the /proc tree.
@@ -50,9 +60,13 @@ else
   MG_LIBPATH=${MG_LIBPATH:-$(ls -tul "/proc/$$/fd" 2>/dev/null |
                                         grep -oE '[0-9]+\s+->\s+.*' |
                                         grep -vE -e '\s+(/dev|pipe:|socket:)' -e '[a-z/]*/bin/(ls|grep|tail|sed|awk)'|
+                                        grep "bootstrap.sh" |
                                         tail -n 1 |
                                         awk '{print $NF}' |
                                         sed -E 's~/[^/]+$~~')}
+  if [ "$__MG_BOOTSTRAP_DEBUG" = "1" ]; then
+    printf "Used /proc/$$ tree to locate mg.sh at %s\n" "$MG_LIBPATH" >&2
+  fi
 fi
 
 # Protect against double loading
@@ -134,3 +148,41 @@ module() {
     unset _d
   fi
 }
+
+__on_exit() {
+  # Cancel all traps at once, we don't want loops!
+  trap - EXIT INT HUP TERM
+
+  # Dump internals when deep debugging is turned on
+  if [ "$__MG_BOOTSTRAP_DEBUG" = "1" ]; then
+    set | grep -E '^(__)?MG_' >& 2
+  fi
+
+  # Call the exit handlers that were registered along the way.
+  if [ -n "${__MG_ATEXIT:-}" ]; then
+    $__MG_ATEXIT
+  fi
+
+  exit
+}
+
+
+# shellcheck disable=SC2120 # Usually at_exit takes args, but not from here!
+at_exit() {
+  if [ -z "${__MG_ATEXIT:-}" ]; then
+    trap '__on_exit' EXIT INT HUP TERM
+    if [ "$#" -gt "0" ]; then
+      __MG_ATEXIT="$*"
+    fi
+  elif [ "$#" -gt "0" ]; then
+    __MG_ATEXIT="$*; ${__MG_ATEXIT:-}"
+  fi
+}
+
+# Call at_exit once, but without arguments. This will install the signal trap
+# and arrange for the __on_exit implementation to dump the state of all internal
+# variables on exit.
+if [ "$__MG_BOOTSTRAP_DEBUG" = "1" ]; then
+  # shellcheck disable=SC2119 # No arguments to at_exit on purpose.
+  at_exit
+fi
