@@ -1,24 +1,6 @@
-#!/usr/bin/env sh
+#!/bin/sh
 
-# Protect against double loading and register dependencies
-if printf %s\\n "${MG_MODULES:-}"|grep -q "interaction"; then
-  return
-else
-  MG_MODULES="${MG_MODULES:-} interaction"
-fi
-
-if ! printf %s\\n "${MG_MODULES:-}"|grep -q "locals"; then
-  printf %s\\n "This module requires the locals module" >&2
-fi
-if ! printf %s\\n "${MG_MODULES:-}"|grep -q "options"; then
-  printf %s\\n "This module requires the options module" >&2
-fi
-if ! printf %s\\n "${MG_MODULES:-}"|grep -q "controls"; then
-  printf %s\\n "This module requires the controls module" >&2
-fi
-if ! printf %s\\n "${MG_MODULES:-}"|grep -q "portability"; then
-  printf %s\\n "This module requires the portability module" >&2
-fi
+module locals options controls portability
 
 prompt() {
   stack_let destination=

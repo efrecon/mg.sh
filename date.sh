@@ -1,16 +1,6 @@
-#!/usr/bin/env sh
+#!/bin/sh
 
-# Protect against double loading and register dependencies
-if printf %s\\n "${MG_MODULES:-}"|grep -q "date"; then
-  return
-else
-  MG_MODULES="${MG_MODULES:-} date"
-fi
-
-if ! printf %s\\n "${MG_MODULES:-}"|grep -q "locals"; then
-  printf %s\\n "This module requires the locals module" >&2
-fi
-
+module locals
 
 # The functions below originally appeared in the MIT-licensed yu.sh. They have
 # been modernised.

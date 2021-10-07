@@ -5,44 +5,42 @@ sourced in target scripts and provide reusable code. These snippets mainly
 target POSIX shell scripts, but using them from other shells such as `bash`
 should be fine. The libraries have unit [tests](#testing).
 
+## Bootstraping
+
+This project supports loading modules (the reusable snippets) from a
+colon-separated search path of directories called `MG_LIBPATH`. However, in most
+cases, all modules are located under the same directory and you can rely on the
+internal mechanisms of [bootstrap.sh](./bootstrap.sh), which you must source
+manually and first of all. [bootstrap.sh](./bootstrap.sh) will guess from where
+it was sourced and will automatically set `MG_LIBPATH` to the directory
+containing it.
+
+### Good Guess
+
 To use these scripts, the following snippet can be copied (and adapted) into
 your main script. You should insert this as early on as possible, e.g. typically
 right after the shebang and initial documenting comment. The example loads two
 scripts from this library, i.e. [`log`](#logging-library) and
-[`controls`](#controls-library). Apart from variable naming, you will have to
-pay specific attention to provide good defaults as `MG_LIBPATH`.
+[`controls`](#controls-library) after having manually bootstrapped.
 
 ```shell
-# Build a default colon separated MG_LIBPATH using the root directory to
-# look for modules that this script depends on. MG_LIBPATH can be set
-# from the outside to facilitate location. Note that this only works when there
-# is support for readlink -f, see https://github.com/ko1nksm/readlinkf for a
-# POSIX alternative.
+# Bootstrap from a kown location relative your main script. Note that this only
+# works when there is support for readlink -f, see the portability module or
+# https://github.com/ko1nksm/readlinkf for a POSIX alternative.
 MG_ROOTDIR=$( cd -P -- "$(dirname -- "$(command -v -- "$(readlink -f "$0")")")" && pwd -P )
-MG_LIBPATH=${MG_LIBPATH:-/usr/local/share/mg.sh:${MG_ROOTDIR}/lib/mg.sh}
-
-# Look for modules passed as parameters in the MG_LIBPATH and source them.
-# Modules are required so fail as soon as it was not possible to load a module
-module() {
-  for module in "$@"; do
-    for d in $(printf %s\\n "$MG_LIBPATH" | awk '{split($1,DIRS,/:/); for ( D in DIRS ) {printf "%s\n", DIRS[D];} }'); do
-      if [ -f "${d}/${module}.sh" ]; then
-        # shellcheck disable=SC1090
-        . "${d}/${module}.sh"
-        unset module; # Use the variable as a marker for module found.
-        break
-      fi
-    done
-    if [ -n "${module:-}" ]; then
-      echo "Cannot find module $module in $MG_LIBPATH !" >& 2
-      exit 1
-    fi
-  done
-}
+. "${MG_ROOTDIR}/lib/mg.sh/bootstrap.sh"
 
 # Source in all relevant modules.
 module log controls
 ```
+
+### Complex Cases
+
+In more complex cases, you could look into a set of known directories in turns
+until you find `bootstrap.sh` and source from there. If you wish to write your
+own modules and still be able to source them via the `module` function, you will
+probably have to set the `MG_LIBPATH` variable before starting the bootstrap
+mechanisms.
 
 ## Logging Library
 
@@ -77,7 +75,7 @@ This template is designed to give as much information as possible while
 facilitating reading. For example it arranges for perfect alignment of the log
 message by default.
 
-```
+```console
 [<name>] [<level>] [<timestamp>] <message>
 ```
 

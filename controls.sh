@@ -1,15 +1,6 @@
-#!/usr/bin/env sh
+#!/bin/sh
 
-# Protect against double loading and register dependencies
-if printf %s\\n "${MG_MODULES:-}"|grep -q "controls"; then
-  return
-else
-  MG_MODULES="${MG_MODULES:-} controls"
-fi
-
-if ! printf %s\\n "${MG_MODULES:-}"|grep -q "locals"; then
-  printf %s\\n "This module requires the locals module" >&2
-fi
+module locals log
 
 backoff_loop() {
   # Default when nothing is specified is to loop forever every second.

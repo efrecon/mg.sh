@@ -1,18 +1,6 @@
-#!/usr/bin/env sh
+#!/bin/sh
 
-# Protect against double loading and register dependencies
-if printf %s\\n "${MG_MODULES:-}"|grep -q "text"; then
-  return
-else
-  MG_MODULES="${MG_MODULES:-} text"
-fi
-
-if ! printf %s\\n "${MG_MODULES:-}"|grep -q "locals"; then
-  printf %s\\n "This module requires the locals module" >&2
-fi
-if ! printf %s\\n "${MG_MODULES:-}"|grep -q "options"; then
-  printf %s\\n "This module requires the options module" >&2
-fi
+module locals options
 
 # Generate a random string.
 rndstr() {

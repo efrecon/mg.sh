@@ -1,21 +1,9 @@
-#!/usr/bin/env sh
-
-# Protect against double loading and register dependencies
-if printf %s\\n "${MG_MODULES:-}"|grep -q "portability"; then
-  return
-else
-  MG_MODULES="${MG_MODULES:-} portability"
-fi
+#!/bin/sh
 
 # Set this to force home-made implementation in favour of local builtin
 __MG_PORTABILITY_FORCE=${__MG_PORTABILITY_FORCE:-0}
 
-if ! printf %s\\n "${MG_MODULES:-}"|grep -q "locals"; then
-  printf %s\\n "This module requires the locals module" >&2
-fi
-if ! printf %s\\n "${MG_MODULES:-}"|grep -q "filesystem"; then
-  printf %s\\n "This module requires the filesystem module" >&2
-fi
+module locals filesystem
 
 b64_encode() { base64; }
 b64_decode() {

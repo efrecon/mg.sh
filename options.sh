@@ -1,18 +1,6 @@
-#!/usr/bin/env sh
+#!/bin/sh
 
-# Protect against double loading and register dependencies
-if printf %s\\n "${MG_MODULES:-}"|grep -q "options"; then
-  return
-else
-  MG_MODULES="${MG_MODULES:-} options"
-fi
-
-if ! printf %s\\n "${MG_MODULES:-}"|grep -q "log"; then
-  printf %s\\n "This module requires the log module" >&2
-fi
-if ! printf %s\\n "${MG_MODULES:-}"|grep -q "locals"; then
-  die "This module requires the locals module"
-fi
+module log locals
 
 # Example call:
 # parseopts \
