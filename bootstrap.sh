@@ -152,6 +152,7 @@ module() {
 __on_exit() {
   # Cancel all traps at once, we don't want loops!
   trap - EXIT INT HUP TERM
+  log_info "$1 caught, exiting"
 
   # Dump internals when deep debugging is turned on
   if [ "$__MG_BOOTSTRAP_DEBUG" = "1" ]; then
@@ -170,7 +171,10 @@ __on_exit() {
 # shellcheck disable=SC2120 # Usually at_exit takes args, but not from here!
 at_exit() {
   if [ -z "${__MG_ATEXIT:-}" ]; then
-    trap '__on_exit' EXIT INT HUP TERM
+    trap '__on_exit EXIT' EXIT
+    trap '__on_exit INT' INT
+    trap '__on_exit HUP' HUP
+    trap '__on_exit TERM' TERM
     if [ "$#" -gt "0" ]; then
       __MG_ATEXIT="$*"
     fi
