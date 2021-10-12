@@ -152,7 +152,7 @@ module() {
 __on_exit() {
   # Cancel all traps at once, we don't want loops!
   trap - EXIT INT HUP TERM
-  log_info "$1 caught, exiting"
+  log_debug "$1 caught, exiting"
 
   # Dump internals when deep debugging is turned on
   if [ "$__MG_BOOTSTRAP_DEBUG" = "1" ]; then
