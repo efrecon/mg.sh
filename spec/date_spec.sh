@@ -122,4 +122,11 @@ Describe 'date.sh'
       The output should eq "184"
     End
   End
+
+  Describe "now"
+    It "Returns seconds since the epoch (test only works using gnu date)"
+      When call now
+      The output should eq "$(date +%s)"
+    End
+  End
 End

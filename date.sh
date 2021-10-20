@@ -187,3 +187,10 @@ iso8601() {
 
   stack_unlet ds tz tzdiff secs utc
 }
+
+
+# Return the number of seconds since the epoch. This is entirely POSIX
+# compliant, see: https://stackoverflow.com/a/12746260
+now() {
+  PATH=$(getconf PATH) awk 'BEGIN{srand();print srand()}'
+}
