@@ -7,7 +7,7 @@ module locals
 
 # Return the approx. number of seconds for the human-readable period passed as a
 # parameter
-howlong() {
+_howlong() {
   stack_let len
   if printf %s\\n "$1"|grep -Eqo '^[0-9]+[[:space:]]*[yY]'; then
     len=$(printf %s\\n "$1"  | sed -En 's/([0-9]+)[[:space:]]*[yY].*/\1/p')
@@ -44,10 +44,46 @@ howlong() {
   elif printf %s\\n "$1"|grep -Eqo '^[0-9]+[[:space:]]*[Ss]'; then
     len=$(printf %s\\n "$1"  | sed -En 's/([0-9]+)[[:space:]]*[Ss].*/\1/p')
     echo "$len"
-  elif printf %s\\n "$1"|grep -Eqo '^[0-9]+'; then
-    printf %s\\n "$1"
   fi
   stack_unlet len
+}
+
+howlong() {
+  stack_let len;   # Will be total lenght, empty when nothing understood
+  stack_let human; # Each human-expressed sub-period
+
+  # We have something that is just figures, extract them and assumes seconds
+  if printf %s\\n "$1"|grep -Eqo '^[[:space:]]*[0-9]+[[:space:]]*$'; then
+    printf %s\\n "$1" | grep -Eo '[0-9]+'
+  else
+    # Otherwise isolate each occurence of a number of figures, followed by a
+    # word (possible spaces between) and try to understand this as a
+    # human-expressed period. Add all of them to get the result, making sure we
+    # start to "count" only if we actually were able to parse anything (so we
+    # return an empty string if we could not extract anything).
+    while read -r human; do
+      stack_let duration
+
+      duration=$(_howlong "$human")
+      if [ -n "$duration" ]; then
+        if [ -z "$len" ]; then
+          len=$duration
+        else
+          len=$(( len + duration))
+        fi
+      fi
+      stack_unlet duration
+    done <<EOF
+$(printf %s\\n "$1" | grep -Eoi '[0-9]+[[:space:]]*[a-z]+')
+EOF
+  fi
+  # Output the length if it actually contains anything, i.e. some seconds that
+  # we could extract from the incoming string.
+  if [ -n "$len" ]; then
+    printf %s\\n "$len"
+  fi
+  stack_unlet len
+  stack_unlet human
 }
 
 # Convert a number of seconds to a human-friendly string mentioning days, hours,

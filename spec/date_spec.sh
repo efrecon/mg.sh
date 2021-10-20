@@ -60,4 +60,66 @@ Describe 'date.sh'
       The output should eq "3 days 2 hours 2 minutes"
     End
   End
+
+  Describe "howlong"
+    It "Understands integers as seconds"
+      When call howlong 32
+      The output should eq "32"
+    End
+
+    It "Understands integers surrounded by spaces as seconds"
+      When call howlong " 32  "
+      The output should eq "32"
+    End
+
+    It "Does not understand non-periods"
+      When call howlong "3 test"
+      The output should eq ""
+    End
+
+    It "Understands s for seconds, no space"
+      When call howlong "32s"
+      The output should eq "32"
+    End
+
+    It "Understands s for seconds, space"
+      When call howlong "32 s"
+      The output should eq "32"
+    End
+
+    It "Understands seconds for seconds, space"
+      When call howlong "32  seconds"
+      The output should eq "32"
+    End
+
+    It "Understands secs for seconds, space"
+      When call howlong "32 secs"
+      The output should eq "32"
+    End
+
+    It "Understands SeCS for seconds, space"
+      When call howlong "32 SeCS"
+      The output should eq "32"
+    End
+
+    It "Understands M for minutes"
+      When call howlong "2M"
+      The output should eq "120"
+    End
+
+    It "Understands Mins for minutes"
+      When call howlong "2Mins"
+      The output should eq "120"
+    End
+
+    It "Understands h for hours"
+      When call howlong "3h"
+      The output should eq "10800"
+    End
+
+    It "Understands long stances"
+      When call howlong "3 minutes 4s "
+      The output should eq "184"
+    End
+  End
 End
