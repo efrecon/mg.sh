@@ -21,7 +21,7 @@ jobs:
       # Discover the semantic version to use
       - name: Semantic build-version
         id: semver
-        uses: Mitigram/gh-action-versioning@v0.1.0
+        uses: Mitigram/gh-action-versioning@v0.1.1
 
       - name: Create Directories
         run: |
