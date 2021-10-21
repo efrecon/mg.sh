@@ -49,7 +49,7 @@ _howlong() {
 }
 
 howlong() {
-  stack_let len;   # Will be total lenght, empty when nothing understood
+  stack_let len;   # Will be total length, empty when nothing understood
   stack_let human; # Each human-expressed sub-period
 
   # We have something that is just figures, extract them and assumes seconds
@@ -57,16 +57,20 @@ howlong() {
     printf %s\\n "$1" | grep -Eo '[0-9]+'
   else
     # Otherwise isolate each occurence of a number of figures, followed by a
-    # word (possible spaces between) and try to understand this as a
-    # human-expressed period. Add all of them to get the result, making sure we
-    # start to "count" only if we actually were able to parse anything (so we
-    # return an empty string if we could not extract anything).
+    # word (restrict first letter to the possible ones, possible spaces between
+    # words) and try to understand this as a human-expressed period. Add all of
+    # them to get the result, making sure we start to "count" only if we
+    # actually were able to parse anything (so we return an empty string if we
+    # could not extract anything).
     while read -r human; do
       stack_let duration
 
+      # Possibly convert the human-expressed period to a number of seconds
       duration=$(_howlong "$human")
+
+      # Add up as long as it was valid, make sure len is only initialised here.
       if [ -n "$duration" ]; then
-        if [ -z "$len" ]; then
+        if [ -z "${len:-}" ]; then
           len=$duration
         else
           len=$(( len + duration))
@@ -74,7 +78,7 @@ howlong() {
       fi
       stack_unlet duration
     done <<EOF
-$(printf %s\\n "$1" | grep -Eoi '[0-9]+[[:space:]]*[a-z]+')
+$(printf %s\\n "$1" | grep -Eoi '[0-9]+[[:space:]]*[smhdwy][a-z]*')
 EOF
   fi
   # Output the length if it actually contains anything, i.e. some seconds that
