@@ -77,6 +77,16 @@ Describe 'date.sh'
       The output should eq ""
     End
 
+    It "Does not understand empty strings"
+      When call howlong ""
+      The output should eq ""
+    End
+
+    It "Does not understand strings with only spaces"
+      When call howlong "     "
+      The output should eq ""
+    End
+
     It "Understands s for seconds, no space"
       When call howlong "32s"
       The output should eq "32"
@@ -121,6 +131,12 @@ Describe 'date.sh'
       When call howlong "3 minutes 4s "
       The output should eq "184"
     End
+
+    It "Skips liaison words"
+      When call howlong "3 minutes and 4 seconds"
+      The output should eq "184"
+    End
+
   End
 
   Describe "now"
