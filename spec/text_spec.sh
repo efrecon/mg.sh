@@ -171,4 +171,29 @@ Describe 'text.sh'
       The output should eq "abc"
     End
   End
+
+  Describe "strsplit"
+    It "Returns an empty string with no arguments"
+      When call strsplit
+      The output should eq ""
+    End
+    It "Returns an empty string with just a separator"
+      When call strsplit ","
+      The output should eq ""
+    End
+    It "Returns the original argument with no split"
+      When call strsplit "," "test"
+      The output should eq "test"
+    End
+    It "Splits several"
+      When call strsplit "," "a,b,c"
+      The output should eq 'a
+b
+c'
+    End
+    It "No split on empty separator"
+      When call strsplit "" a,b,c
+      The output should eq "a,b,c"
+    End
+  End
 End

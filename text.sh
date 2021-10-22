@@ -83,3 +83,38 @@ strjoin() {
   printf %s\\n "$1"
   stack_unlet joiner
 }
+
+# Split $2 on separator at $1. Separator can only be one char long.
+strsplit() {
+  [ -z "${1:-}" ] && echo "${2:-}" && return
+  stack_let _oldstate
+  # Disable globbing.
+  # This ensures that the word-splitting is safe.
+  _oldstate=$(set +o); set -f
+
+  # Store the current value of 'IFS' so we
+  # can restore it later.
+  old_ifs=$IFS
+
+  # Change the field separator to what we're
+  # splitting on.
+  IFS=$1
+
+  # Create an argument list splitting at each
+  # occurance of '$2'.
+  #
+  # This is safe to disable as it just warns against
+  # word-splitting which is the behavior we expect.
+  # shellcheck disable=2086
+  set -- $2
+
+  # Print each list value on its own line.
+  printf '%s\n' "$@"
+
+  # Restore the value of 'IFS'.
+  IFS=$old_ifs
+
+  # Restore globbing state
+  set +vx; eval "$_oldstate"
+  stack_unlet _oldstate
+}
