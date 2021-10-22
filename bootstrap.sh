@@ -161,7 +161,8 @@ __on_exit() {
 
   # Call the exit handlers that were registered along the way.
   if [ -n "${__MG_ATEXIT:-}" ]; then
-    $__MG_ATEXIT
+    log_debug "Calling registered exit handlers: $__MG_ATEXIT"
+    eval "$__MG_ATEXIT"
   fi
 
   exit
