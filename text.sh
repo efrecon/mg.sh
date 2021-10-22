@@ -68,3 +68,18 @@ unboolean() {
 
 is_true() { test "$(unboolean "$1")" = "1"; }
 is_false() { test "$(unboolean "$1")" = "0"; }
+
+# Join passed arguments with a separator, which can be of any length. Strongly
+# inspired by https://serverfault.com/a/936545
+strjoin() {
+  if [ "$#" -lt "2" ]; then return; fi
+  stack_let joiner
+  joiner="$1"
+  shift
+  while [ "$#" -gt "1" ]; do
+    printf %s%s "$1" "$joiner"
+    shift
+  done
+  printf %s\\n "$1"
+  stack_unlet joiner
+}

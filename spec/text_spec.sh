@@ -144,4 +144,31 @@ Describe 'text.sh'
       The output should eq ""
     End
   End
+
+  Describe "strjoin"
+    It "Returns an empty string with no arguments"
+      When call strjoin
+      The output should eq ""
+    End
+    It "Returns an empty string with just a separator"
+      When call strjoin ","
+      The output should eq ""
+    End
+    It "Returns the original argument with just an argument"
+      When call strjoin "," "test"
+      The output should eq "test"
+    End
+    It "Joins several arguments"
+      When call strjoin "," a b c
+      The output should eq "a,b,c"
+    End
+    It "Joins with longer separator"
+      When call strjoin "---" a b c
+      The output should eq "a---b---c"
+    End
+    It "Joins with an empty separator"
+      When call strjoin "" a b c
+      The output should eq "abc"
+    End
+  End
 End
