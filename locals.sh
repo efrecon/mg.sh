@@ -5,7 +5,15 @@ __MG_LOCALS_FORCE=${__MG_LOCALS_FORCE:-0}
 
 # This is a cleaned up version of https://stackoverflow.com/a/18600920. It
 # properly passes shellcheck's default set of rules.
-if [ "$__MG_LOCALS_FORCE" = "0" ] && type local | grep -q "shell builtin"; then
+if [ "$__MG_LOCALS_FORCE" = "0" ] && type local 2>/dev/null | grep -q "shell builtin"; then
+  if [ -n "${BASH:-}" ]; then
+    # Remove any exiting aliases
+    alias | sed -E 's/^alias\s+([^=]+)=.*/\1/g' | while IFS= read -r __alias; do
+      unalias "$__alias"
+    done
+    # shellcheck disable=SC3044 # We are running in bash!!
+    shopt -s expand_aliases
+  fi
   alias stack_let=local
   alias stack_unlet=true
 else
