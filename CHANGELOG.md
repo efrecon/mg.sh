@@ -1,5 +1,10 @@
 # Changes
 
+## v0.2.0
+
+This release brings proper `bash` awareness and compatibility. I also correct a
+few bugs in the bootstraping code.
+
 ## v0.1.0
 
 This is the first official release of the `mg.sh` library. This release comes as
@@ -22,4 +27,3 @@ of modules is:
 + `portability` provides pure-shell replacements for GNU or Linux specific
   features.
 + `text` provides text-oriented utility functions.
-
