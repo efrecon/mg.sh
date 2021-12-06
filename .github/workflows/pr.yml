@@ -16,7 +16,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Unit Tests
+      - name: POSIX Shell Unit Tests
         run: |
           docker run \
             --rm \
@@ -24,4 +24,15 @@ jobs:
             -w /mg.sh \
             -u $(id -u):$(id -g) \
             shellspec/shellspec \
+              --format d
+
+      - name: bash Unit Tests
+        run: |
+          docker run \
+            --rm \
+            -v $(pwd):/mg.sh:ro \
+            -w /mg.sh \
+            -u $(id -u):$(id -g) \
+            shellspec/shellspec-debian \
+              --shell=bash \
               --format d
