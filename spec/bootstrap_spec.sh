@@ -59,4 +59,15 @@ Describe 'bootstrap.sh'
       The output should equal ""
     End
   End
+
+  Describe 'is_function'
+    It 'Detects functions'
+      When call is_function is_function
+      The status should be success
+    End
+    It 'Detects non-functions'
+      When call is_function shift
+      The status should be failure
+    End
+  End
 End

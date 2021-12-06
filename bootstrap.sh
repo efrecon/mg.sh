@@ -110,6 +110,10 @@ has_module() {
   return 1
 }
 
+is_function() {
+  type "$1" 2>/dev/null | head -n 1 | grep -q function
+}
+
 module() {
   if [ -z "${MG_LIBPATH:-}" ]; then
     echo "Provide MG_LIBPATH, a colon-separated search path for scripts, possibly via bootstrap function" >& 2
@@ -125,7 +129,7 @@ module() {
           break
         elif [ -f "${_d}/${_module}.sh" ]; then
           # Log if we can
-          if type log_debug | head -n 1 | grep -q function; then
+          if is_function log_debug; then
             log_debug "Sourcing ${_d}/${_module}.sh"
           fi
           # shellcheck disable=SC1090
@@ -152,7 +156,9 @@ module() {
 __on_exit() {
   # Cancel all traps at once, we don't want loops!
   trap - EXIT INT HUP TERM
-  log_debug "$1 caught, exiting"
+  if is_function log_debug; then
+    log_debug "$1 caught, exiting"
+  fi
 
   # Dump internals when deep debugging is turned on
   if [ "$__MG_BOOTSTRAP_DEBUG" = "1" ]; then
@@ -161,7 +167,9 @@ __on_exit() {
 
   # Call the exit handlers that were registered along the way.
   if [ -n "${__MG_ATEXIT:-}" ]; then
-    log_debug "Calling registered exit handlers: $__MG_ATEXIT"
+    if is_function log_debug; then
+      log_debug "Calling registered exit handlers: $__MG_ATEXIT"
+    fi
     eval "$__MG_ATEXIT"
   fi
 
