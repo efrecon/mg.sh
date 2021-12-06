@@ -229,6 +229,7 @@ Describe 'options.sh'
           h,help FLAG @HELP - "Print this help" \
         -- --help
       The stderr should include "Print this help"
+      The status should be success
     End
     It 'Adds defaults to help'
       When call parseopts \
@@ -238,6 +239,7 @@ Describe 'options.sh'
           h,help FLAG @HELP - "Print this help" \
         -- --help
       The stderr should include "default:"
+      The status should be success
     End
     It 'Generates automatic usage in help'
       When call parseopts \
@@ -247,6 +249,7 @@ Describe 'options.sh'
           h,help FLAG @HELP - "Print this help" \
         -- --help
       The stderr should include "USAGE"
+      The status should be success
     End
     It 'Generates usage in help'
       When call parseopts \
@@ -257,6 +260,7 @@ Describe 'options.sh'
           h,help FLAG @HELP - "Print this help" \
         -- --help
       The stderr should include "this is my marker"
+      The status should be success
     End
     It 'Generates synopsis in help'
       When call parseopts \
@@ -267,6 +271,7 @@ Describe 'options.sh'
           h,help FLAG @HELP - "Print this help" \
         -- --help
       The stderr should include "this is my marker"
+      The status should be success
     End
     It 'Generates description in help'
       When call parseopts \
@@ -277,6 +282,7 @@ Describe 'options.sh'
           h,help FLAG @HELP - "Print this help" \
         -- --help
       The stderr should include "this is my marker"
+      The status should be success
     End
 
     It 'Generates argument shifting information'

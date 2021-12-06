@@ -215,7 +215,7 @@ EOF
     printf "\n" >&2
     stack_unlet line names type varname default text defvar
     if [ "$main" = "1" ] && [ "${1:-1}" = "1" ]; then
-      die
+      die "" 0
     fi
   }
 
