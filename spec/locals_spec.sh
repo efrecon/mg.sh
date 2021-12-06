@@ -2,11 +2,12 @@
 
 Describe 'locals.sh'
   Include bootstrap.sh
+
   # shellcheck disable=2034 # Internal variable, used mostly for testing
   __MG_LOCALS_FORCE=1; # Force using our implementation to test it
   module locals
 
-  Describe 'let/unlet'
+  Describe 'Internal let/unlet'
     first() {
       stack_let a=first
       echo "$a"

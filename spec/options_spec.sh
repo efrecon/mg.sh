@@ -8,6 +8,9 @@ Describe 'options.sh'
     trigger() {
       printf %s=%s\\n "$1" "$2"
     }
+    unquote() {
+      sed -E 's/^([A-Z_]+)='\''?([^'\'']*)'\''?$/\1=\2/g'
+    }
     runprefixed() {
       parseopts \
         --prefix "TEST" \
@@ -15,7 +18,8 @@ Describe 'options.sh'
       # Only grep when there is something to grep, otherwise grep would
       # (wrongly) return an error
       if set | grep -q '^TEST_'; then
-        set | sort | grep '^TEST_'
+        # We manually unquote to smooth away differences between shells
+        set | sort | grep '^TEST_' | unquote
       fi
     }
     unprefixed() {
@@ -26,7 +30,8 @@ Describe 'options.sh'
       # Only grep when there is something to grep, otherwise grep would
       # (wrongly) return an error
       if set | grep -q "^${vname}="; then
-        set | sort | grep "^${vname}="
+        # We manually unquote to smooth away differences between shells
+        set | sort | grep "^${vname}=" | unquote
       fi
     }
 
@@ -51,14 +56,14 @@ Describe 'options.sh'
         --options \
           f,flag,theflag FLAG THEFLAG 0 "set flag" \
         -- -f
-      The line 1 should equal "TEST_THEFLAG='1'"
+      The line 1 should equal "TEST_THEFLAG=1"
     End
     It 'Defaults single-dash flag'
       When call runprefixed \
         --options \
           f,flag,theflag FLAG THEFLAG 0 "set flag" \
         --
-      The line 1 should equal "TEST_THEFLAG='0'"
+      The line 1 should equal "TEST_THEFLAG=0"
     End
     It 'Skips defaulting single-dash flag'
       When call runprefixed \
@@ -71,42 +76,42 @@ Describe 'options.sh'
         --options \
           f,flag,theflag FLAG THEFLAG 0 "set flag" \
         -- --flag
-      The line 1 should equal "TEST_THEFLAG='1'"
+      The line 1 should equal "TEST_THEFLAG=1"
     End
     It 'Set supports several double-dashed flag'
       When call runprefixed \
         --options \
           f,flag,theflag FLAG THEFLAG 0 "set flag" \
         -- --theflag
-      The line 1 should equal "TEST_THEFLAG='1'"
+      The line 1 should equal "TEST_THEFLAG=1"
     End
     It 'Set double-dashed flag explicitely (true)'
       When call runprefixed \
         --options \
           f,flag,theflag FLAG THEFLAG 0 "set flag" \
         -- --flag=true
-      The line 1 should equal "TEST_THEFLAG='1'"
+      The line 1 should equal "TEST_THEFLAG=1"
     End
     It 'Set double-dashed flag explicitely (false)'
       When call runprefixed \
         --options \
           f,flag,theflag FLAG THEFLAG 0 "set flag" \
         -- --flag=false
-      The line 1 should equal "TEST_THEFLAG='0'"
+      The line 1 should equal "TEST_THEFLAG=0"
     End
     It 'Set double-dashed flag explicitely (on)'
       When call runprefixed \
         --options \
           f,flag,theflag FLAG THEFLAG 0 "set flag" \
         -- --flag=on
-      The line 1 should equal "TEST_THEFLAG='1'"
+      The line 1 should equal "TEST_THEFLAG=1"
     End
     It 'Fails setting double-dashed flag explicitely with non-boolean value'
       When call runprefixed \
         --options \
           f,flag,theflag FLAG THEFLAG 0 "set flag" \
         -- --flag=hello
-      The line 1 should equal "TEST_THEFLAG='0'"
+      The line 1 should equal "TEST_THEFLAG=0"
       The error should include "boolean"
     End
     It 'Inverts single-dash flag'
@@ -114,21 +119,21 @@ Describe 'options.sh'
         --options \
           f,flag,theflag FLAG,INVERT THEFLAG 0 "set flag" \
         -- -f
-      The line 1 should equal "TEST_THEFLAG='0'"
+      The line 1 should equal "TEST_THEFLAG=0"
     End
     It 'Inverts double-dashed flag'
       When call runprefixed \
         --options \
           f,flag,theflag FLAG,INVERT THEFLAG 0 "set flag" \
         -- --flag
-      The line 1 should equal "TEST_THEFLAG='0'"
+      The line 1 should equal "TEST_THEFLAG=0"
     End
     It 'Inverts double-dashed explicit flag'
       When call runprefixed \
         --options \
           f,flag,theflag FLAG,INVERT THEFLAG 0 "set flag" \
         -- --flag=true
-      The line 1 should equal "TEST_THEFLAG='0'"
+      The line 1 should equal "TEST_THEFLAG=0"
     End
 
     It 'Set single-dash option'
@@ -136,14 +141,14 @@ Describe 'options.sh'
         --options \
           o,option,theoption OPTION THEOPT test "set option" \
         -- -o hello
-      The line 1 should equal "TEST_THEOPT='hello'"
+      The line 1 should equal "TEST_THEOPT=hello"
     End
     It 'Defaults single-dash option'
       When call runprefixed \
         --options \
           o,option,theoption OPTION THEOPT test "set option" \
         --
-      The line 1 should equal "TEST_THEOPT='test'"
+      The line 1 should equal "TEST_THEOPT=test"
     End
     It 'Skips defaulting single-dash option'
       When call runprefixed \
@@ -157,14 +162,14 @@ Describe 'options.sh'
         --options \
           o,option,theoption OPTION THEOPT test "set option" \
         -- --option hello
-      The line 1 should equal "TEST_THEOPT='hello'"
+      The line 1 should equal "TEST_THEOPT=hello"
     End
     It 'Sets several double-dashed options'
       When call runprefixed \
         --options \
           o,option,theoption OPTION THEOPT test "set option" \
         -- --theoption hello
-      The line 1 should equal "TEST_THEOPT='hello'"
+      The line 1 should equal "TEST_THEOPT=hello"
     End
     It 'Overrides several double-dashed options'
       When call runprefixed \
@@ -173,21 +178,21 @@ Describe 'options.sh'
         -- \
           --option nonono \
           --theoption hello
-      The line 1 should equal "TEST_THEOPT='hello'"
+      The line 1 should equal "TEST_THEOPT=hello"
     End
     It 'Sets double-dashed option (modern style with equal sign)'
       When call runprefixed \
         --options \
           o,option,theoption OPTION THEOPT test "set option" \
         -- --option=hello
-      The line 1 should equal "TEST_THEOPT='hello'"
+      The line 1 should equal "TEST_THEOPT=hello"
     End
     It 'Sets empty double-dashed option (modern style with equal sign)'
       When call runprefixed \
         --options \
           o,option,theoption OPTION THEOPT test "set option" \
         -- --option=
-      The line 1 should equal "TEST_THEOPT=''"
+      The line 1 should equal "TEST_THEOPT="
     End
     It 'Triggers with the name of the option'
       When call runprefixed \
@@ -210,7 +215,7 @@ Describe 'options.sh'
         --options \
           f,flag,theflag FLAG THEFLAG 0 "set flag" \
         -- -f
-      The line 1 should equal "THEFLAG='1'"
+      The line 1 should equal "THEFLAG=1"
     End
     It 'Set single-dash option (unprefixed)'
       When call unprefixed \
@@ -218,7 +223,7 @@ Describe 'options.sh'
         --options \
           o,option,theoption OPTION THEOPT test "set option" \
         -- -o hello
-      The line 1 should equal "THEOPT='hello'"
+      The line 1 should equal "THEOPT=hello"
     End
 
     It 'Generates help'
@@ -330,8 +335,8 @@ Describe 'options.sh'
           f,flag,theflag FLAG THEFLAG 0 "set flag" \
           h,help FLAG @HELP - "Print this help" \
         -- --flag --option hello
-      The line 1 should equal "TEST_THEFLAG='1'"
-      The line 2 should equal "TEST_THEOPT='hello'"
+      The line 1 should equal "TEST_THEFLAG=1"
+      The line 2 should equal "TEST_THEOPT=hello"
     End
     It 'Sets flags and options (short)'
       When call runprefixed \
@@ -340,8 +345,8 @@ Describe 'options.sh'
           f,flag,theflag FLAG THEFLAG 0 "set flag" \
           h,help FLAG @HELP - "Print this help" \
         -- -f -o hello
-      The line 1 should equal "TEST_THEFLAG='1'"
-      The line 2 should equal "TEST_THEOPT='hello'"
+      The line 1 should equal "TEST_THEFLAG=1"
+      The line 2 should equal "TEST_THEOPT=hello"
     End
     It 'Sets flags and options (concatenated)'
       When call runprefixed \
@@ -350,8 +355,8 @@ Describe 'options.sh'
           f,flag,theflag FLAG THEFLAG 0 "set flag" \
           h,help FLAG @HELP - "Print this help" \
         -- -fo hello
-      The line 1 should equal "TEST_THEFLAG='1'"
-      The line 2 should equal "TEST_THEOPT='hello'"
+      The line 1 should equal "TEST_THEFLAG=1"
+      The line 2 should equal "TEST_THEOPT=hello"
     End
 
     It 'Reports variables'
