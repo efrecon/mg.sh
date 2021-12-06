@@ -6,7 +6,7 @@ __MG_BOOTSTRAP_DEBUG=${__MG_BOOTSTRAP_DEBUG:-0}
 # Declare MG_LIBPATH
 if [ -n "${BASH:-}" ]; then
   # shellcheck disable=SC3028,SC3054 # We know BASH_SOURCE only exists under bash!
-  MG_LIBPATH=${MG_LIBPATH:-$(dirname "${BASH_SOURCE[0]}")}
+  MG_LIBPATH=${MG_LIBPATH:-$( cd -P -- "$(dirname "${BASH_SOURCE[0]}")" && pwd -P )}
   if [ "$__MG_BOOTSTRAP_DEBUG" = "1" ]; then
     printf "Used bash to locate mg.sh at %s\n" "$MG_LIBPATH" >&2
   fi

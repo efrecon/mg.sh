@@ -120,5 +120,5 @@ backoff_loop() {
 
 # Test variables without eval
 var_exists() { set | grep -q "^${1}="; }
-var_strictly_empty() { set | grep -q "^${1}=''"; }
+var_strictly_empty() { set | grep -qE "^${1}=(''|$)"; }
 var_empty() { ! var_exists "$1" || var_strictly_empty "$1"; }
