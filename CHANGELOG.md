@@ -1,9 +1,15 @@
 # Changes
 
+## v0.2.1
+
+This release mostly brings improvements for developers through enforcing proper
+line breaks on Windows also. The release also improves the release process
+through a number of tests around packaging.
+
 ## v0.2.0
 
-This release brings proper `bash` awareness and compatibility. I also correct a
-few bugs in the bootstraping code.
+This release brings proper `bash` awareness and compatibility. It also corrects
+a few bugs in the bootstraping code.
 
 ## v0.1.0
 
