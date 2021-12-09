@@ -68,7 +68,9 @@ modules() {
   printf "#### mg.sh\n"
   printf "# Picked:\t%s\n" "$MG_MODULES"
   printf "# Date  :\t%s\n" "$(date +'%Y%m%d-%H%M%S')"
-  printf "MG_MODULES=\"%s\"\n\n" "$MG_MODULES"
+  printf "MG_MODULES=\"%s\"\n" "$MG_MODULES"
+  # shellcheck disable=SC2016 # This is ok, we want to output the setting line!
+  printf 'MG_LIBPATH=${MG_LIBPATH:-"-"}\n\n'
 }
 
 # Remove existing file or bail out early

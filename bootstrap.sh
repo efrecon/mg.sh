@@ -118,7 +118,7 @@ module() {
   if [ -z "${MG_LIBPATH:-}" ]; then
     echo "Provide MG_LIBPATH, a colon-separated search path for scripts, possibly via bootstrap function" >& 2
     exit
-  else
+  elif [ "${MG_LIBPATH}" != "-" ]; then
     # shellcheck disable=SC3043 # local exists in most shell implementations anyhow
     local _module _d || true
 
