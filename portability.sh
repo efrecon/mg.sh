@@ -71,10 +71,8 @@ readlink_f() {
 # be replaced (i.e. all variables written as $FOO or ${FOO} inside the value of
 # the first argument)
 # shellcheck disable=SC2120
-mg_envsubst() {
-  stack_let line
-  stack_let varlist='[A-Z_][A-Z0-9_]*'
-
+mg_envsubst() (
+  varlist='[A-Z_][A-Z0-9_]*'
   if [ "$#" -ge "1" ]; then
     # shellcheck disable=SC2016
     varlist=$(  printf %s\\n "$1" |
@@ -84,10 +82,6 @@ mg_envsubst() {
   fi
 
   while IFS= read -r line || [ -n "$line" ]; do  # Read, incl. non-empty last line
-    stack_let _lineEscaped
-    stack_let _lineResolved
-    stack_let _oldstate
-
     # Transform everything that looks like an environment variable (all
     # caps, no first digit) to its {} equivalent. This transform
     # understands \$ quoting, but will fail within single quotes. Then
@@ -108,12 +102,8 @@ EOF
     set +vx; eval "$_oldstate"
     # and convert back the control characters to the real chars.
     printf %s\\n "$_lineResolved" | tr '\1\2\3\4' '`([$'
-    stack_unlet _lineEscaped _lineResolved _oldstate
   done
-
-  stack_unlet varlist
-  stack_unlet line
-}
+)
 
 # Install mg_envsubst automatically as envsubst when it does not exist.
 if [ "$__MG_PORTABILITY_FORCE" = "1" ] || ! command -v envsubst >/dev/null; then
