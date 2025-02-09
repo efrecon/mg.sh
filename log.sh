@@ -3,14 +3,14 @@
 # When run at the terminal, the default is to set MG_INTERACTIVE to be 1,
 # turning on colouring for all calls to the colouring functions contained here.
 if [ -t 1 ]; then
-    MG_INTERACTIVE=${MG_INTERACTIVE:-1}
+  : "${MG_INTERACTIVE:=1}"
 else
-    MG_INTERACTIVE=${MG_INTERACTIVE:-0}
+  : "${MG_INTERACTIVE:=0}"
 fi
 
 # Verbosity inside the script. One of: error, warn, notice, info, debug or
 # trace.
-MG_VERBOSITY=${MG_VERBOSITY:-"info"}
+: "${MG_VERBOSITY:="info"}"
 
 # Store the root directory where the script was found, together with the name of
 # the script and the name of the app, e.g. the name of the script without the
@@ -22,7 +22,7 @@ MG_APPNAME=${MG_CMDNAME%.*}
 
 # This should be set from the script with a usage description that will be print
 # out from the usage procedure when problems are detected.
-MG_USAGE=${MG_USAGE:-""}
+: "${MG_USAGE:=""}"
 
 # Colourisation support for logging and output.
 _colour() {
@@ -42,17 +42,33 @@ cyan() { _colour "36" "$1"; }
 dark_gray() { _colour "90" "$1"; }
 light_gray() { _colour "37" "$1"; }
 
+
+# Convert textual log levels to numbers for comparison.
+_log_level() {
+  case "$1" in
+    [Ee][Rr][Rr][Oo][Rr])
+      printf 1\\n;;
+    [Ww][Aa][Rr][Nn])
+      printf 2\\n;;
+    [Nn][Oo][Tt][Ii][Cc][Ee])
+      printf 3\\n;;
+    [Ii][Nn][Ff][Oo])
+      printf 4\\n;;
+    [Dd][Ee][Bb][Uu][Gg])
+      printf 5\\n;;
+    [Tt][Rr][Aa][Cc][Ee])
+      printf 6\\n;;
+    [0-9])
+      printf %d\\n "$1";;
+    *)
+      printf 3\\n;;
+  esac
+}
+
+
 # Conditional coloured logging
-_LOG_LEVELS="error
-warn
-notice
-info
-debug
-trace"
 _log() (
-  passed=$(printf %s\\n "$_LOG_LEVELS" | sed -n "/${1}/=" | tr "[:lower:]" "[:upper:]")
-  current=$(printf %s\\n "$_LOG_LEVELS" | sed -n "/${MG_VERBOSITY}/=" | tr "[:lower:]" "[:upper:]")
-  if [ "$passed" -le "$current" ]; then
+  if [ "$(_log_level "$1")" -le "$(_log_level "$MG_VERBOSITY")" ]; then
     case "$1" in
       [Ee][Rr][Rr][Oo][Rr])
         printf "[%s] [%s] [%s] %s\n" "$(dark_gray "$3")" "$(magenta ERR)" "$(date +'%Y%m%d-%H%M%S')" "$2" >&2;;
@@ -81,14 +97,17 @@ log() { log_info "$@"; } # For the lazy ones...
 die() { [ -n "${1:-}" ] && log_error "$1"; exit "${2:-1}"; }
 
 check_verbosity() {
-  printf %s\\n "$_LOG_LEVELS" | grep -qi "${1:-$MG_VERBOSITY}"
+  printf %s\\n "error
+warn
+notice
+info
+debug
+trace" | grep -qi "${1:-$MG_VERBOSITY}"
 }
 
-at_verbosity() (
-  passed=$(printf %s\\n "$_LOG_LEVELS" | sed -n "/${1}/=" | tr "[:lower:]" "[:upper:]")
-  current=$(printf %s\\n "$_LOG_LEVELS" | sed -n "/${MG_VERBOSITY}/=" | tr "[:lower:]" "[:upper:]")
-  test "$passed" -le "$current"
-)
+at_verbosity() {
+  test "$(_log_level "$1")" -le "$(_log_level "$MG_VERBOSITY")"
+}
 
 usage() {
   [ "$#" -gt "1" ] && printf %s\\n "$2" >&2
