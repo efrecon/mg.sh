@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # Set this to force home-made implementation in favour of local builtin
-__MG_PORTABILITY_FORCE=${__MG_PORTABILITY_FORCE:-0}
+: "${__MG_PORTABILITY_FORCE:=0}"
 
 module locals filesystem
 
@@ -10,15 +10,13 @@ b64_decode() {
   if [ "$(uname -s)" = "Darwin" ]; then
     base64 -D; # Mac takes -D or --decode
   else
-    base64 -d; # Alpine/budybox does not understand --decode
+    base64 -d; # Alpine/busybox does not understand --decode
   fi
 }
 
 # This is the same as read -s, which is not portable. All other options to read
 # are carried out.
-read_s() {
-  stack_let oldtty
-
+read_s() (
   if [ -t 0 ]; then
     # Disable echo.
     oldtty=$(stty -g)
@@ -44,9 +42,7 @@ read_s() {
     # next line of output begins at a new line.
     printf \\n
   fi
-
-  stack_unlet oldtty
-}
+)
 
 # This is the same as readlink -f, which does not exist on MacOS
 readlink_f() {
