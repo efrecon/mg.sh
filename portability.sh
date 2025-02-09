@@ -16,7 +16,9 @@ b64_decode() {
 
 # This is the same as read -s, which is not portable. All other options to read
 # are carried out.
-read_s() (
+read_s() {
+  stack_let oldtty
+
   if [ -t 0 ]; then
     # Disable echo.
     oldtty=$(stty -g)
@@ -42,7 +44,9 @@ read_s() (
     # next line of output begins at a new line.
     printf \\n
   fi
-)
+
+  stack_unlet oldtty
+}
 
 # This is the same as readlink -f, which does not exist on MacOS
 readlink_f() {
